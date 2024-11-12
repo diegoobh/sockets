@@ -23,7 +23,7 @@
 #include <time.h>
 
 #define PUERTO 7527
-#define TAM_BUFFER 10
+#define TAM_BUFFER 516
 
 /*
  *			M A I N
