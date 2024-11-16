@@ -1,0 +1,4 @@
+*.o
+clientudp
+clientcp
+servidor
