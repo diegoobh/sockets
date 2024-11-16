@@ -441,9 +441,9 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
 
 	char response[BUFFERSIZE];
 
-	//int addrlen;
-    socklen_t addrlen;
-   	//addrlen = sizeof(struct sockaddr_in);
+	int addrlen;
+
+   	addrlen = sizeof(struct sockaddr_in);
 
       memset (&hints, 0, sizeof (hints));
       hints.ai_family = AF_INET;
@@ -455,5 +455,5 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
          perror("serverUDP");
          printf("%s: sendto error\n", "serverUDP");
          return;
-         }   
+    }   
  }

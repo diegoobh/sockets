@@ -105,16 +105,16 @@ char *argv[];
 
     while (n_retry > 0) {
 		/* Build the request based on input arguments */
-			if (argc == 2) {
-				snprintf(request, BUFFERSIZE, "\r\n");
-			} else {
-				snprintf(request, BUFFERSIZE, "%s\r\n", argv[2]);
-			}        
-			if (sendto(s, request, strlen(request), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
-            perror(argv[0]);
-            fprintf(stderr, "%s: unable to send request\n", argv[0]);
-            exit(1);
-	}
+		if (argc == 2) {
+			snprintf(request, BUFFERSIZE, "\r\n");
+		} else {
+			snprintf(request, BUFFERSIZE, "%s\r\n", argv[2]);
+		}        
+		if (sendto(s, request, strlen(request), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
+			perror(argv[0]);
+			fprintf(stderr, "%s: unable to send request\n", argv[0]);
+			exit(1);
+		}
 
         alarm(TIMEOUT);
 
