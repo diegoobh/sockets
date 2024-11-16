@@ -51,7 +51,7 @@ char *argv[];
 	char buf[TAM_BUFFER];
     char request[TAM_BUFFER];
 
-	if (argc > 2) {
+	if (argc > 3) {
 		fprintf(stderr, "Usage:  %s <remote host> [usuario[@host]]\n", argv[0]);
 		exit(1);
 	}
@@ -127,10 +127,10 @@ char *argv[];
 			argv[1], ntohs(myaddr_in.sin_port), (char *) ctime(&timevar));
 
     /* Build the request based on input arguments */
-    if (argc <= 1) {
+    if (argc == 2) {
         snprintf(request, TAM_BUFFER, "\r\n");
     } else {
-        snprintf(request, TAM_BUFFER, "%s\r\n", argv[1]);
+        snprintf(request, TAM_BUFFER, "%s\r\n", argv[2]);
     }
 
 	/* Send the request to the server */

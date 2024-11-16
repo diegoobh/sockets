@@ -44,10 +44,10 @@ char *argv[];
     char response[BUFFERSIZE];
     struct addrinfo hints, *res;
 
-    if (argc != 3) {
-        fprintf(stderr, "Usage:  %s <nameserver> <target>\n", argv[0]);
-        exit(1);
-    }
+    if (argc > 3) {
+		fprintf(stderr, "Usage:  %s <remote host> [usuario[@host]]\n", argv[0]);
+		exit(1);
+	}
 
     s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s == -1) {
@@ -105,10 +105,10 @@ char *argv[];
 
     while (n_retry > 0) {
 		/* Build the request based on input arguments */
-			if (argc <= 1) {
+			if (argc == 2) {
 				snprintf(request, BUFFERSIZE, "\r\n");
 			} else {
-				snprintf(request, BUFFERSIZE, "%s\r\n", argv[1]);
+				snprintf(request, BUFFERSIZE, "%s\r\n", argv[2]);
 			}        
 			if (sendto(s, request, strlen(request), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
             perror(argv[0]);
