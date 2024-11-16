@@ -41,9 +41,49 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in);
 void errout(char *);		/* declare error out routine */
+void process_request(const char *request, char *response);
 
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
+
+void process_request(const char *request, char *response) {
+    // Limpia los espacios al inicio y al final de la petición.
+    char trimmed[TAM_BUFFER];
+    strncpy(trimmed, request, TAM_BUFFER);
+    char *start = trimmed;
+    while (*start == ' ' || *start == '\t') start++; // Ignorar espacios iniciales.
+    char *end = start + strlen(start) - 1;
+    while (end > start && (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n')) end--;
+    *(end + 1) = '\0';
+
+    if (strlen(start) == 0) {
+        // Petición vacía: realizar finger en el equipo local.
+        FILE *fp = popen("finger", "r");
+        if (fp == NULL) {
+            snprintf(response, TAM_BUFFER, "Error ejecutando finger en el servidor local.");
+        } else {
+            fread(response, 1, TAM_BUFFER - 1, fp);
+            pclose(fp);
+        }
+    } else {
+        // Petición con contenido.
+        char command[TAM_BUFFER] = {0};
+        if (strchr(start, '@')) {
+            // Petición con usuario@host.
+            snprintf(command, TAM_BUFFER, "finger %s", start);
+        } else {
+            // Petición con un usuario local.
+            snprintf(command, TAM_BUFFER, "finger %s", start);
+        }
+        FILE *fp = popen(command, "r");
+        if (fp == NULL) {
+            snprintf(response, TAM_BUFFER, "Error ejecutando finger para: %s", start);
+        } else {
+            fread(response, 1, TAM_BUFFER - 1, fp);
+            pclose(fp);
+        }
+    }
+}
 
 int main(argc, argv)
 int argc;
@@ -290,12 +330,14 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	char buf[TAM_BUFFER];		/* This example uses TAM_BUFFER byte messages. */
 	char hostname[MAXHOST];		/* remote host's name string */
 
-	int len, len1, status;
+	int len, status;
     struct hostent *hp;		/* pointer to host info for remote host */
     long timevar;			/* contains time returned by time() */
     
     struct linger linger;		/* allow a lingering, graceful close; */
     				            /* used when setting SO_LINGER */
+
+	char response[TAM_BUFFER];
     				
 	/* Look up the host information for the remote host
 	 * that we have connected with.  Its internet address
@@ -348,47 +390,14 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 		 * follow, and the loop will be exited.
 		 */
 	while (len = recv(s, buf, TAM_BUFFER, 0)) {
-		if (len == -1) errout(hostname); /* error from recv */
-			/* The reason this while loop exists is that there
-			 * is a remote possibility of the above recv returning
-			 * less than TAM_BUFFER bytes.  This is because a recv returns
-			 * as soon as there is some data, and will not wait for
-			 * all of the requested data to arrive.  Since TAM_BUFFER bytes
-			 * is relatively small compared to the allowed TCP
-			 * packet sizes, a partial receive is unlikely.  If
-			 * this example had used 2048 bytes requests instead,
-			 * a partial receive would be far more likely.
-			 * This loop will keep receiving until all TAM_BUFFER bytes
-			 * have been received, thus guaranteeing that the
-			 * next recv at the top of the loop will start at
-			 * the begining of the next request.
-			 */
-		while (len < TAM_BUFFER) {
-			len1 = recv(s, &buf[len], TAM_BUFFER-len, 0);
-			if (len1 == -1) errout(hostname);
-			len += len1;
-		}
-			/* Increment the request count. */
-		reqcnt++;
-			/* This sleep simulates the processing of the
-			 * request that a real server might do.
-			 */
-		sleep(1);
-			/* Send a response back to the client. */
-		if (send(s, buf, TAM_BUFFER, 0) != TAM_BUFFER) errout(hostname);
-	}
+        if (len == -1) errout(hostname);
+        buf[len] = '\0'; // Asegurar terminación de la cadena.
+        process_request(buf, response);
+        send(s, response, strlen(response), 0);
 
-		/* The loop has terminated, because there are no
-		 * more requests to be serviced.  As mentioned above,
-		 * this close will block until all of the sent replies
-		 * have been received by the remote host.  The reason
-		 * for lingering on the close is so that the server will
-		 * have a better idea of when the remote has picked up
-		 * all of the data.  This will allow the start and finish
-		 * times printed in the log file to reflect more accurately
-		 * the length of time this connection was used.
-		 */
-	close(s);
+		reqcnt++;
+    }
+    close(s);
 
 		/* Log a finishing message. */
 	time (&timevar);
@@ -430,28 +439,18 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
 
     struct addrinfo hints, *res;
 
-	int addrlen;
-    
-   	addrlen = sizeof(struct sockaddr_in);
+	char response[BUFFERSIZE];
+
+	//int addrlen;
+    socklen_t addrlen;
+   	//addrlen = sizeof(struct sockaddr_in);
 
       memset (&hints, 0, sizeof (hints));
       hints.ai_family = AF_INET;
-		/* Treat the message as a string containing a hostname. */
-	    /* Esta funci�n es la recomendada para la compatibilidad con IPv6 gethostbyname queda obsoleta. */
-    errcode = getaddrinfo (buffer, NULL, &hints, &res); 
-    if (errcode != 0){
-		/* Name was not found.  Return a
-		 * special value signifying the error. */
-		reqaddr.s_addr = ADDRNOTFOUND;
-      }
-    else {
-		/* Copy address of host into the return buffer. */
-		reqaddr = ((struct sockaddr_in *) res->ai_addr)->sin_addr;
-	}
-     freeaddrinfo(res);
 
-	nc = sendto (s, &reqaddr, sizeof(struct in_addr),
-			0, (struct sockaddr *)&clientaddr_in, addrlen);
+	process_request(buffer, response);
+    nc = sendto(s, response, strlen(response), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+
 	if ( nc == -1) {
          perror("serverUDP");
          printf("%s: sendto error\n", "serverUDP");
