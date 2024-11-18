@@ -72,10 +72,11 @@ char *argv[];
 	servaddr_in.sin_family = AF_INET;
 	
 	/* Get the host information for the hostname that the
-	 * user passed in. */
-      memset (&hints, 0, sizeof (hints));
-      hints.ai_family = AF_INET;
- 	 /* esta funci�n es la recomendada para la compatibilidad con IPv6 gethostbyname queda obsoleta*/
+	   user passed in. */
+    memset (&hints, 0, sizeof (hints));
+    hints.ai_family = AF_INET;
+
+ 	/* esta funci�n es la recomendada para la compatibilidad con IPv6 gethostbyname queda obsoleta*/
     errcode = getaddrinfo (argv[1], NULL, &hints, &res); 
     if (errcode != 0){
 			/* Name was not found.  Return a
