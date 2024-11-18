@@ -33,7 +33,7 @@ int main(argc, argv)
 int argc;
 char *argv[];
 {   
-	int addrlen, i, j, errcode, n_retry;
+	int addrlen, i, j, errcode, n_retry, cc;
     int s;				
    	struct addrinfo hints, *res;
     long timevar;			
@@ -45,7 +45,7 @@ char *argv[];
     char request[TAM_BUFFER];
     char response[TAM_BUFFER];
 
-    if (argc > 2) {
+    if (argc > 3) {
         fprintf(stderr, "Usage: %s TCP/UDP [usuario[@host]]\n", argv[0]);
         exit(1);
     }
@@ -226,7 +226,7 @@ char *argv[];
 
             alarm(TIMEOUT);
 
-            if (recvfrom(s, response, BUFFERSIZE, 0, (struct sockaddr *)&servaddr_in, &addrlen) == -1) {
+            if ((cc = recvfrom(s, response, BUFFERSIZE - 1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                 if (errno == EINTR) {
                     printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
                     n_retry--;
@@ -237,7 +237,7 @@ char *argv[];
                 }
             } else {
                 alarm(0);
-                response[BUFFERSIZE - 1] = '\0';
+                response[cc] = '\0';
                 printf("Server response: %s\n", response);
                 break;
             }
@@ -248,6 +248,7 @@ char *argv[];
         }
 
     } else {
+        fprintf(stderr, "Error de comparación");
         fprintf(stderr, "Usage: %s TCP/UDP [usuario[@host]]\n", argv[0]);
         exit(1);
     }
