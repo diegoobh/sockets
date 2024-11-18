@@ -42,8 +42,8 @@ char *argv[];
     struct sigaction vec;
     char hostname[MAXHOST] = "localhost";
 	char buf[TAM_BUFFER];
-    char request[TAM_BUFFER];
-    char response[TAM_BUFFER];
+    char request[BUFFERSIZE];
+    char response[BUFFERSIZE];
 
     if (argc > 3) {
         fprintf(stderr, "Usage: %s TCP/UDP [usuario[@host]]\n", argv[0]);
@@ -226,7 +226,7 @@ char *argv[];
 
             alarm(TIMEOUT);
 
-            if ((cc = recvfrom(s, response, BUFFERSIZE - 1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
+            if ((cc = recvfrom(s, response, BUFFERSIZE-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                 if (errno == EINTR) {
                     printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
                     n_retry--;
