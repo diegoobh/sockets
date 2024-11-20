@@ -41,19 +41,21 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in);
 void errout(char *);		/* declare error out routine */
-void process_request(const char *request, char *response);
+void procesar_peticion(const char *request, char *response);
 
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
 
-void process_request(const char *request, char *response) {
+void procesar_peticion(const char *request, char *response) {
     // Limpia los espacios al inicio y al final de la petición.
     char trimmed[TAM_BUFFER];
     strncpy(trimmed, request, TAM_BUFFER);
     char *start = trimmed;
-    while (*start == ' ' || *start == '\t') start++; // Ignorar espacios iniciales.
+    while (*start == ' ' || *start == '\t') 
+		start++; // Ignorar espacios iniciales.
     char *end = start + strlen(start) - 1;
-    while (end > start && (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n')) end--;
+    while (end > start && (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n')) 
+		end--;
     *(end + 1) = '\0';
 
     if (strlen(start) == 0) {
@@ -392,7 +394,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	while (len = recv(s, buf, TAM_BUFFER, 0)) {
         if (len == -1) errout(hostname);
         buf[len] = '\0'; // Asegurar terminación de la cadena.
-        process_request(buf, response);
+        procesar_peticion(buf, response);
         send(s, response, strlen(response), 0);
 
 		reqcnt++;
@@ -448,7 +450,7 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
       memset (&hints, 0, sizeof (hints));
       hints.ai_family = AF_INET;
 
-	process_request(buffer, response);
+	procesar_peticion(buffer, response);
     nc = sendto(s, response, strlen(response), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 
 	if ( nc == -1) {

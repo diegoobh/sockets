@@ -43,9 +43,9 @@ char *argv[];
     char hostname[MAXHOST] = "localhost";
 	char buf[TAM_BUFFER];
     char peticion_TCP[TAM_BUFFER];
-    char peticion_UDP[TAM_BUFFER]; // BUFFERSIZE
+    char peticion_UDP[TAM_BUFFER];
     char respuesta_TCP[TAM_BUFFER];
-    char respuesta_UDP[TAM_BUFFER]; // BUFFERSIZE
+    char respuesta_UDP[TAM_BUFFER];
 
     if (argc > 3) {
         fprintf(stderr, "Usage: %s TCP/UDP [usuario[@host]]\n", argv[0]);
@@ -125,7 +125,7 @@ char *argv[];
                 hostname, ntohs(myaddr_in.sin_port), (char *) ctime(&timevar));
 
         /* Build the request based on input arguments */
-        if (argc == 2) {
+        if (argc == 1) {
             snprintf(peticion_TCP, TAM_BUFFER, "\r\n");
         } else {
             snprintf(peticion_TCP, TAM_BUFFER, "%s\r\n", argv[2]);
@@ -215,10 +215,10 @@ char *argv[];
 
         while (n_retry > 0) {
             /* Build the request based on input arguments */
-            if (argc == 2) {
-                snprintf(peticion_UDP, TAM_BUFFER, "\r\n"); //BUFFERSIZE
+            if (argc == 1) {
+                snprintf(peticion_UDP, TAM_BUFFER, "\r\n");
             } else {
-                snprintf(peticion_UDP, TAM_BUFFER, "%s\r\n", argv[2]); //BUFFERSIZE
+                snprintf(peticion_UDP, TAM_BUFFER, "%s\r\n", argv[2]);
             }        
             if (sendto(s, peticion_UDP, strlen(peticion_UDP), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
                 perror(argv[0]);
