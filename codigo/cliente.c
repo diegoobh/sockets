@@ -42,8 +42,10 @@ char *argv[];
     struct sigaction vec;
     char hostname[MAXHOST] = "localhost";
 	char buf[TAM_BUFFER];
-    char request[BUFFERSIZE];
-    char response[BUFFERSIZE];
+    char peticion_TCP[TAM_BUFFER];
+    char peticion_UDP[BUFFERSIZE];
+    char respuesta_TCP[TAM_BUFFER];
+    char respuesta_UDP[BUFFERSIZE];
 
     if (argc > 3) {
         fprintf(stderr, "Usage: %s TCP/UDP [usuario[@host]]\n", argv[0]);
@@ -124,13 +126,13 @@ char *argv[];
 
         /* Build the request based on input arguments */
         if (argc == 2) {
-            snprintf(request, TAM_BUFFER, "\r\n");
+            snprintf(peticion_TCP, TAM_BUFFER, "\r\n");
         } else {
-            snprintf(request, TAM_BUFFER, "%s\r\n", argv[2]);
+            snprintf(peticion_TCP, TAM_BUFFER, "%s\r\n", argv[2]);
         }
 
         /* Send the request to the server */
-        if (send(s, request, strlen(request), 0) != strlen(request)) {
+        if (send(s, peticion_TCP, strlen(peticion_TCP), 0) != strlen(peticion_TCP)) {
             fprintf(stderr, "%s: Connection aborted on error ", argv[0]);
             exit(1);
         }
@@ -141,14 +143,14 @@ char *argv[];
         * after the server has sent all of its replies, and closed
         * its end of the connection.
         */
-        while (i = recv(s, buf, TAM_BUFFER, 0)) {
+        while (i = recv(s, respuesta_TCP, TAM_BUFFER, 0)) {
             if (i == -1) {
                 perror(argv[0]);
                 fprintf(stderr, "%s: error reading result\n", argv[0]);
                 exit(1);
             }
-            buf[i] = '\0';
-            printf("%s", buf);
+            respuesta_TCP[i] = '\0';
+            printf("%s", respuesta_TCP);
         }
 
         /* Print message indicating completion of task. */
@@ -214,11 +216,11 @@ char *argv[];
         while (n_retry > 0) {
             /* Build the request based on input arguments */
             if (argc == 2) {
-                snprintf(request, BUFFERSIZE, "\r\n");
+                snprintf(peticion_UDP, BUFFERSIZE, "\r\n");
             } else {
-                snprintf(request, BUFFERSIZE, "%s\r\n", argv[2]);
+                snprintf(peticion_UDP, BUFFERSIZE, "%s\r\n", argv[2]);
             }        
-            if (sendto(s, request, strlen(request), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
+            if (sendto(s, peticion_UDP, strlen(peticion_UDP), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
                 perror(argv[0]);
                 fprintf(stderr, "%s: unable to send request\n", argv[0]);
                 exit(1);
@@ -226,7 +228,7 @@ char *argv[];
 
             alarm(TIMEOUT);
 
-            if ((cc = recvfrom(s, response, BUFFERSIZE-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
+            if ((cc = recvfrom(s, respuesta_UDP, BUFFERSIZE-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                 if (errno == EINTR) {
                     printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
                     n_retry--;
@@ -237,8 +239,8 @@ char *argv[];
                 }
             } else {
                 alarm(0);
-                response[cc] = '\0';
-                printf("Server response: %s\n", response);
+                respuesta_UDP[cc] = '\0';
+                printf("Respuesta del servidor: %s\n", respuesta_UDP);
                 break;
             }
         }
