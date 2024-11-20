@@ -46,7 +46,8 @@ void procesar_peticion(const char *request, char *response);
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
 
-void procesar_peticion(const char *request, char *response) {
+void procesar_peticion(const char *request, char *respuesta) {
+
     // Limpia los espacios al inicio y al final de la petición.
     char trimmed[TAM_BUFFER];
     strncpy(trimmed, request, TAM_BUFFER);
@@ -59,15 +60,24 @@ void procesar_peticion(const char *request, char *response) {
     *(end + 1) = '\0';
 
     if (strlen(start) == 0) {
-        // Petición vacía: realizar finger en el equipo local.
-        FILE *fp = popen("finger", "r");
-        if (fp == NULL) {
-            snprintf(response, TAM_BUFFER, "Error ejecutando finger en el servidor local.");
-        } else {
-            fread(response, 1, TAM_BUFFER - 1, fp);
-            pclose(fp);
-        }
-    } else {
+		fprintf(stderr, "Petición vacía. Ejecutando finger en el equipo local.\n");
+		FILE *fp = popen("finger", "r");
+		if (fp == NULL) {
+			snprintf(respuesta, TAM_BUFFER, "Error ejecutando finger en el equipo local.\n");
+		} else {
+			size_t bytesLeidos;
+			respuesta[0] = '\0';  // Asegura que la respuesta esté vacía inicialmente.
+			while ((bytesLeidos = fread(respuesta + strlen(respuesta), 1, TAM_BUFFER - strlen(respuesta) - 1, fp)) > 0) {
+				respuesta[strlen(respuesta) + bytesLeidos] = '\0';  // Termina la cadena.
+			}
+			pclose(fp);
+		}
+		if (strlen(respuesta) == 0) {
+			snprintf(respuesta, TAM_BUFFER, "No se pudo procesar la petición.\n");
+		}
+
+	} else {
+		fprintf(stderr, "Petición: %s\n", start);
         // Petición con contenido.
         char command[TAM_BUFFER] = {0};
         if (strchr(start, '@')) {
@@ -79,9 +89,9 @@ void procesar_peticion(const char *request, char *response) {
         }
         FILE *fp = popen(command, "r");
         if (fp == NULL) {
-            snprintf(response, TAM_BUFFER, "Error ejecutando finger para: %s", start);
+            snprintf(respuesta, TAM_BUFFER, "Error ejecutando finger para: %s", start);
         } else {
-            fread(response, 1, TAM_BUFFER - 1, fp);
+            fread(respuesta, 1, TAM_BUFFER - 1, fp);
             pclose(fp);
         }
     }
@@ -339,7 +349,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
     struct linger linger;		/* allow a lingering, graceful close; */
     				            /* used when setting SO_LINGER */
 
-	char response[TAM_BUFFER];
+	char respuesta_TCP[TAM_BUFFER];
     				
 	/* Look up the host information for the remote host
 	 * that we have connected with.  Its internet address
@@ -394,8 +404,11 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	while (len = recv(s, buf, TAM_BUFFER, 0)) {
         if (len == -1) errout(hostname);
         buf[len] = '\0'; // Asegurar terminación de la cadena.
-        procesar_peticion(buf, response);
-        send(s, response, strlen(response), 0);
+        procesar_peticion(buf, respuesta_TCP);
+
+		if (send(s, respuesta_TCP, strlen(respuesta_TCP), 0) != strlen(respuesta_TCP)) {
+			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+		}
 
 		reqcnt++;
     }
@@ -441,7 +454,7 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
 
     struct addrinfo hints, *res;
 
-	char response[BUFFERSIZE];
+	char respuesta_UDP[BUFFERSIZE];
 
 	int addrlen;
 
@@ -450,8 +463,8 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
       memset (&hints, 0, sizeof (hints));
       hints.ai_family = AF_INET;
 
-	procesar_peticion(buffer, response);
-    nc = sendto(s, response, strlen(response), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+	procesar_peticion(buffer, respuesta_UDP);
+    nc = sendto(s, respuesta_UDP, strlen(respuesta_UDP), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 
 	if ( nc == -1) {
          perror("serverUDP");

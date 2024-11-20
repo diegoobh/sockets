@@ -131,11 +131,15 @@ char *argv[];
             snprintf(peticion_TCP, TAM_BUFFER, "%s\r\n", argv[2]);
         }
 
+        fprintf(stderr, "Mensaje a enviar: %s\n", peticion_TCP);
+
         /* Send the request to the server */
         if (send(s, peticion_TCP, strlen(peticion_TCP), 0) != strlen(peticion_TCP)) {
             fprintf(stderr, "%s: Connection aborted on error ", argv[0]);
             exit(1);
         }
+
+        fprintf(stderr, "Mensaje enviado: %s\n", peticion_TCP);
 
         /* Now, start receiving all of the replys from the server.
         * This loop will terminate when the recv returns zero,
