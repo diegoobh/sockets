@@ -161,6 +161,9 @@ char *argv[];
         time(&timevar);
         printf("All done at %s", (char *)ctime(&timevar));
 
+        // Cerrar el socket al finalizar la conexión 
+        close(s);
+
     } else if (strcmp(argv[1], "UDP") == 0) {
 
         s = socket(AF_INET, SOCK_DGRAM, 0);
@@ -252,6 +255,9 @@ char *argv[];
         if (n_retry == 0) {
             printf("Unable to get response from %s after %d attempts.\n", hostname, RETRIES);
         }
+
+        // Cerrar el socket al finalizar la conexión
+        close(s);
 
     } else {
         fprintf(stderr, "Error de comparación");
