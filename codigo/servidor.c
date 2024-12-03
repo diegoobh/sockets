@@ -59,9 +59,9 @@ void procesar_peticion(const char *request, char *respuesta) {
 		end--;
     *(end + 1) = '\0';
 
-    if (strlen(start) == 0) {
+    if (strlen(start) == 0) { // Petición vacía
 		fprintf(stderr, "Petición vacía. Ejecutando finger en el equipo local.\n");
-		FILE *fp = popen("finger", "r");
+		FILE *fp = popen("finger", "r"); // Ejecutar finger general en el equipo local
 		if (fp == NULL) {
 			snprintf(respuesta, TAM_BUFFER, "Error ejecutando finger en el equipo local.\n");
 		} else {
@@ -87,7 +87,7 @@ void procesar_peticion(const char *request, char *respuesta) {
             // Petición con un usuario local.
             snprintf(command, TAM_BUFFER, "finger %s", start);
         }
-        FILE *fp = popen(command, "r");
+        FILE *fp = popen(command, "r"); // Ejecutar comando en terminal
         if (fp == NULL) {
             snprintf(respuesta, TAM_BUFFER, "Error ejecutando finger para: %s", start);
         } else {
