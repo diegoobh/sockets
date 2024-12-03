@@ -40,16 +40,52 @@ char *argv[];
     struct sockaddr_in myaddr_in;	/* for local socket address */
     struct sockaddr_in servaddr_in;	/* for server socket address */
     struct sigaction vec;
-    char hostname[MAXHOST] = "localhost";
+    char hostname[TAM_BUFFER];
 	char buf[TAM_BUFFER];
-    char peticion_TCP[TAM_BUFFER];
-    char peticion_UDP[TAM_BUFFER];
+    char peticion[TAM_BUFFER];
+    char usuario[TAM_BUFFER];
     char respuesta_TCP[TAM_BUFFER];
     char respuesta_UDP[TAM_BUFFER];
 
     if (argc > 3) {
         fprintf(stderr, "Usage: %s TCP/UDP [usuario[@host]]\n", argv[0]);
         exit(1);
+    }
+
+    /* Build the request based on input arguments */
+    if (argc == 1) {
+        snprintf(peticion, TAM_BUFFER, "\r\n");
+    } else {
+        snprintf(peticion, TAM_BUFFER, "%s\r\n", argv[2]);
+    }
+
+    fprintf(stderr, "Mensaje a enviar: %s\n", peticion);
+
+    // Buscamos @ en la cadena
+    char *posicion = strchr(peticion, '@');
+
+    if(posicion != NULL) {
+        // Calcular la longitud del usuario
+        int longitud_usuario = posicion - peticion;
+
+        // Copiar el nombre de usuario
+        strncpy(usuario, peticion, longitud_usuario);
+        usuario[longitud_usuario] = '\0'; // Añadir el terminador nulo
+
+        // Obtener el host
+        char *host = posicion + 1;
+        strcpy(hostname, host);
+        
+    } else {
+        // Si no hay @, hostname = localhost
+        strcpy(hostname, "localhost");
+
+        // Verificar la peticion es solo \r\n usuario vacío 
+        if (strcmp(peticion, "\r\n") == 0) {
+            strcpy(usuario, "");
+        } else { // Si no, ysuario = peticion 
+            strcpy(usuario, peticion)
+        }
     }
 
     if (strcmp(argv[1], "TCP") == 0) {
@@ -124,22 +160,13 @@ char *argv[];
         printf("Connected to %s on port %u at %s",
                 hostname, ntohs(myaddr_in.sin_port), (char *) ctime(&timevar));
 
-        /* Build the request based on input arguments */
-        if (argc == 1) {
-            snprintf(peticion_TCP, TAM_BUFFER, "\r\n");
-        } else {
-            snprintf(peticion_TCP, TAM_BUFFER, "%s\r\n", argv[2]);
-        }
-
-        fprintf(stderr, "Mensaje a enviar: %s\n", peticion_TCP);
-
         /* Send the request to the server */
-        if (send(s, peticion_TCP, strlen(peticion_TCP), 0) != strlen(peticion_TCP)) {
+        if (send(s, usuario, strlen(usuario), 0) != strlen(usuario)) {
             fprintf(stderr, "%s: Connection aborted on error ", argv[0]);
             exit(1);
         }
 
-        fprintf(stderr, "Mensaje enviado: %s\n", peticion_TCP);
+        fprintf(stderr, "Mensaje enviado: %s\n", usuario);
 
         /* Now, start receiving all of the replys from the server.
         * This loop will terminate when the recv returns zero,
@@ -221,13 +248,8 @@ char *argv[];
         n_retry = RETRIES;
 
         while (n_retry > 0) {
-            /* Build the request based on input arguments */
-            if (argc == 1) {
-                snprintf(peticion_UDP, TAM_BUFFER, "\r\n");
-            } else {
-                snprintf(peticion_UDP, TAM_BUFFER, "%s\r\n", argv[2]);
-            }        
-            if (sendto(s, peticion_UDP, strlen(peticion_UDP), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
+      
+            if (sendto(s, usuario, strlen(usuario), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
                 perror(argv[0]);
                 fprintf(stderr, "%s: unable to send request\n", argv[0]);
                 exit(1);

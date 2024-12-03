@@ -41,59 +41,18 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in);
 void errout(char *);		/* declare error out routine */
-void procesar_peticion(const char *request, char *response);
+void procesar_peticion(const char *usuario, char *respuesta);
 
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
 
-void procesar_peticion(const char *request, char *respuesta) {
+void procesar_peticion(const char *usuario, char *respuesta) {
 
-    // Limpia los espacios al inicio y al final de la petición.
-    char trimmed[TAM_BUFFER];
-    strncpy(trimmed, request, TAM_BUFFER);
-    char *start = trimmed;
-    while (*start == ' ' || *start == '\t') 
-		start++; // Ignorar espacios iniciales.
-    char *end = start + strlen(start) - 1;
-    while (end > start && (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n')) 
-		end--;
-    *(end + 1) = '\0';
-
-    if (strlen(start) == 0) { // Petición vacía
-		fprintf(stderr, "Petición vacía. Ejecutando finger en el equipo local.\n");
-		FILE *fp = popen("finger", "r"); // Ejecutar finger general en el equipo local
-		if (fp == NULL) {
-			snprintf(respuesta, TAM_BUFFER, "Error ejecutando finger en el equipo local.\n");
-		} else {
-			size_t bytesLeidos;
-			respuesta[0] = '\0';  // Asegura que la respuesta esté vacía inicialmente.
-			while ((bytesLeidos = fread(respuesta + strlen(respuesta), 1, TAM_BUFFER - strlen(respuesta) - 1, fp)) > 0) {
-				respuesta[strlen(respuesta) + bytesLeidos] = '\0';  // Termina la cadena.
-			}
-			pclose(fp);
-		}
-		if (strlen(respuesta) == 0) {
-			snprintf(respuesta, TAM_BUFFER, "No se pudo procesar la petición.\n");
-		}
+    if (strlen(usuario) == 0) { // Petición vacía
+		// Finger con todos los usuarios locales del sistema.
 
 	} else {
-		fprintf(stderr, "Petición: %s\n", start);
-        // Petición con contenido.
-        char command[TAM_BUFFER] = {0};
-        if (strchr(start, '@')) {
-            // Petición con usuario@host.
-            snprintf(command, TAM_BUFFER, "finger %s", start);
-        } else {
-            // Petición con un usuario local.
-            snprintf(command, TAM_BUFFER, "finger %s", start);
-        }
-        FILE *fp = popen(command, "r"); // Ejecutar comando en terminal
-        if (fp == NULL) {
-            snprintf(respuesta, TAM_BUFFER, "Error ejecutando finger para: %s", start);
-        } else {
-            fread(respuesta, 1, TAM_BUFFER - 1, fp);
-            pclose(fp);
-        }
+		// Finger con el usuario solicitado en la petición.
     }
 }
 

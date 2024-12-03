@@ -1,0 +1,29 @@
+finger i9367527
+Login: i9367527       			Name: Borrallo Herrero Diego
+Directory: /home/i9367527           	Shell: /bin/bash
+On since Tue Dec  3 12:12 (CET) on pts/7 from 172.28.190.121
+No mail.
+No Plan.
+
+finger
+finger: /dev//pts/25: No such file or directory
+finger: /dev//pts/28: No such file or directory
+finger: /dev//pts/29: No such file or directory
+finger: /dev//pts/32: No such file or directory
+Login    Name                    Tty      Idle  Login Time   Office     Office Phone
+andres   andres                  pts/0      23  Dec  3 08:49 (81.32.17.31)
+i0830751 Del Barrio Gonzalez Be *pts/29         Dec  2 14:33 (87.220.66.180)
+i0908339 Velazquez Ganoza Maria  pts/20      8  Dec  3 12:13 (172.28.136.22)
+i0912274 Rodriguez Rivas Emma    pts/13      5  Dec  3 12:16 (172.20.1.210)
+i0943925 Martin Santos Alvaro    pts/19         Dec  3 12:16 (172.28.198.143)
+i0957477 Amor Diaz Jesus         pts/14     15  Dec  3 11:56 (10.50.22.232)
+i0967600 Blazquez Delgado Alvar  pts/12      8  Dec  3 12:03 (172.20.1.159)
+i0971523 Fraile De La Varga Osc  pts/11     35  Dec  3 11:45 (172.28.191.43)
+i0974457 Herrero Bermejo Franci  pts/17      1  Dec  3 12:07 (172.28.197.67)
+i1030074 Pereira Martinez Hugo   pts/21      8  Dec  3 12:13 (172.20.1.209)
+i1120512 Fuentes Garcia Cynthia  pts/16      3  Dec  3 11:59 (172.28.195.110)
+i1743074 Tocino Rio Marta       *pts/25         Dec  2 11:25 (172.28.153.29)
+i1743074 Tocino Rio Marta       *pts/28         Dec  2 11:26 (172.28.153.29)
+i2416951 Torres Martin Angel     pts/22      6  Dec  3 12:15 (172.28.241.74)
+i5323757 Paredes Carreno Clara  *pts/32         Dec  2 15:24 (83.54.82.114)
+i9367527 Borrallo Herrero Diego  pts/7          Dec  3 12:12 (172.28.190.121)
