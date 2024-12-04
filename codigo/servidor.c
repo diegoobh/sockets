@@ -41,18 +41,59 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in);
 void errout(char *);		/* declare error out routine */
-void procesar_peticion(const char *usuario, char *respuesta);
+char * procesar_peticion(const char *usuario, char *respuesta);
 
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
 
-void procesar_peticion(const char *usuario, char *respuesta) {
+char * procesar_peticion(const char *usuario) {
 
-    if (strlen(usuario) == 0) { // Petición vacía
-		// Finger con todos los usuarios locales del sistema.
+	char respuesta[TAM_BUFFER];
 
-	} else {
+    if (strlen(usuario) != 0) { 
 		// Finger con el usuario solicitado en la petición.
+		char login[TAM_BUFFER];
+		char name[TAM_BUFFER];
+		char directory[TAM_BUFFER];
+		char shell[TAM_BUFFER];
+		char tty[TAM_BUFFER];
+		char ip[TAM_BUFFER];
+		char time[TAM_BUFFER];
+		char mail[TAM_BUFFER];
+		char plan[TAM_BUFFER];
+		char infoConexion[TAM_BUFFER]; 
+
+		// Obtener información del usuario.
+		// ...
+		// Construir la respuesta.
+		
+		sprintf(infoConexion. "On since %s on %s from %s", time, tty, ip);
+		sprintf(respuesta, "\nLogin: %s\t\t\t\t\tName: %s\n
+							  Directory: %s\t\t\t\tShell: %s\n
+							  %s\n
+							  %s\n
+							  %s\r\n", 
+							  login, name, directory, shell, 
+							  infoConexion, mail, plan);
+
+		return respuesta;
+
+	} else { // Petición vacía
+		// Finger con todos los usuarios locales del sistema.
+		char login[TAM_BUFFER];
+		char name[TAM_BUFFER];
+		char tty[TAM_BUFFER];
+		char idleTime[TAM_BUFFER];
+		char loginTime[TAM_BUFFER];
+		char office[TAM_BUFFER];
+		char phone[TAM_BUFFER];
+
+		// Obtener información de todos los usuarios.
+		// ...
+		// Construir la respuesta.
+		// ... 
+
+		return respuesta;
     }
 }
 
@@ -363,7 +404,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	while (len = recv(s, buf, TAM_BUFFER, 0)) {
         if (len == -1) errout(hostname);
         buf[len] = '\0'; // Asegurar terminación de la cadena.
-        procesar_peticion(buf, respuesta_TCP);
+        respuesta_TCP = procesar_peticion(buf);
 
 		if (send(s, respuesta_TCP, strlen(respuesta_TCP), 0) != strlen(respuesta_TCP)) {
 			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
@@ -422,7 +463,7 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
       memset (&hints, 0, sizeof (hints));
       hints.ai_family = AF_INET;
 
-	procesar_peticion(buffer, respuesta_UDP);
+	respuesta_UDP = procesar_peticion(buffer);
     nc = sendto(s, respuesta_UDP, strlen(respuesta_UDP), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 
 	if ( nc == -1) {
