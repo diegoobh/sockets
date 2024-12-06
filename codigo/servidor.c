@@ -40,14 +40,16 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in);
 void errout(char *);		/* declare error out routine */
-void procesar_peticion(char *usuario, char *respuesta);
+void procesar_peticion(int s, char *buf);
 
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
 
-void procesar_peticion(char *usuario, char *respuesta) {
+void procesar_peticion(int s, char *usuario) {
 
 	printf("Entro funcion usuario: %s\n", usuario); 
+
+	char respuesta[TAM_BUFFER];
 
     if (usuario != NULL) { 
 		printf("Usuario no vacio\n");
@@ -193,10 +195,14 @@ void procesar_peticion(char *usuario, char *respuesta) {
 							  login, name, directory, shell, 
 							  infoConexion, mail, plan);
 		
-		printf("Enviando respuesta: %s\n", respuesta);
+		printf("Enviando respuesta...\n");
+
+		if (send(s, respuesta, strlen(respuesta), 0) != strlen(respuesta)) {
+			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+		}
 
 	} else { // Petición vacía
-		// // Finger con todos los usuarios locales del sistema.
+		// Finger con todos los usuarios locales del sistema.
 		// char login[TAM_BUFFER];
 		// char name[TAM_BUFFER];
 		// char tty[TAM_BUFFER];
@@ -204,6 +210,11 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		// char loginTime[TAM_BUFFER];
 		// char office[TAM_BUFFER];
 		// char phone[TAM_BUFFER];
+
+		// // Obtener información de todos los usuarios.
+		// char comando[TAM_BUFFER];
+		// char salida[TAM_BUFFER];
+		// char linea[TAM_BUFFER];		
 
 		// // Obtener información de todos los usuarios.
 		// // ...
@@ -463,8 +474,6 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
     
     struct linger linger;		/* allow a lingering, graceful close; */
     				            /* used when setting SO_LINGER */
-
-	char respuesta_TCP[TAM_BUFFER];
     				
 	/* Look up the host information for the remote host
 	 * that we have connected with.  Its internet address
@@ -520,19 +529,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
         if (len == -1) errout(hostname);
         buf[len] = '\0'; // Asegurar terminación de la cadena.
 
-		// Usuario recibido en la petición.
-		printf("Usuario recibido: %s\n", buf);
-
-		procesar_peticion(buf, respuesta_TCP); // Almacenamos en respuesta_TCP el resultado
-
-		printf("Peticion hecha\n");
-
-		// Respuesta a mandar 
-		printf("Respuesta a enviar: %s\n", respuesta_TCP);
-
-		if (send(s, respuesta_TCP, strlen(respuesta_TCP), 0) != strlen(respuesta_TCP)) {
-			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
-		}
+		procesar_peticion(s, buf); // Almacenamos en respuesta_TCP el resultado
 
 		reqcnt++;
     }
@@ -587,7 +584,8 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
     memset (&hints, 0, sizeof (hints));
     hints.ai_family = AF_INET;
 
-	procesar_peticion(buffer, respuesta_UDP); // Almacenamos en respuesta_UDP el resultado
+	// Hacer la funcion compatible con UDP
+	procesar_peticion(s, buffer); // Almacenamos en respuesta_UDP el resultado
 
     nc = sendto(s, respuesta_UDP, strlen(respuesta_UDP), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 

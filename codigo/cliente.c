@@ -183,12 +183,12 @@ char *argv[];
             printf("Resuesta del servidor: \n%s", respuesta_TCP);
         }
 
+        // Cerrar el socket al finalizar la conexión 
+        close(s);
+
         /* Print message indicating completion of task. */
         time(&timevar);
         printf("All done at %s", (char *)ctime(&timevar));
-
-        // Cerrar el socket al finalizar la conexión 
-        close(s);
 
     } else if (strcmp(argv[1], "UDP") == 0) {
 
