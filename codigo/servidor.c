@@ -95,7 +95,7 @@ void procesar_peticion(char *usuario, char *respuesta) {
             strncpy(contenido, linea, TAM_BUFFER);
 
             // Eliminar el salto de línea al final de la línea
-            linea[strcspn(contenido, "\n")] = '\0'; // Eliminar el '\n' 
+            contenido[strcspn(contenido, "\n")] = '\0'; // Eliminar el '\n' 
             
             // Obtener el primer campo de la línea (usuario) hasta el primer ':'
             char *usuario_linea = strtok(contenido, ":");
@@ -103,9 +103,10 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			if (strcmp(usuario_linea, usuario) == 0) {
             	printf("Usuario encontrado: %s\n", usuario_linea);
 				strncpy(salida, linea, TAM_BUFFER);
-            	fclose(fp);
+            	break; 
         	}
 		}
+		fclose(fp);
 		printf("Salida obtenida: %s\n", salida);
 		// Obtener los campos de la salida: 
 		char *separador; 
