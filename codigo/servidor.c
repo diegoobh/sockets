@@ -100,14 +100,14 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			return NULL;
 		}
 		// Sexto campo: directorio
-		if ((separador separador = strtok(NULL, ":")) != NULL) {
+		if ((separador = strtok(NULL, ":")) != NULL) {
 			strncpy(directory, separador, TAM_BUFFER);
 		} else {
 			fprintf(stderr, "Error al obtener el directorio del usuario.\n");
 			return NULL;
 		}
 		// Séptimo campo: shell;
-		if ((separador separador = strtok(NULL, ":")) != NULL) {
+		if ((separador = strtok(NULL, ":")) != NULL) {
 			strncpy(shell, separador, TAM_BUFFER);
 		} else {
 			fprintf(stderr, "Error al obtener el shell del usuario.\n");
