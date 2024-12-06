@@ -90,7 +90,7 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			return;
 		}
 		// Leer la salida del comando
-		while(fgets(linea, TAM_BUFFER, fp) != NULL) {
+		if(fgets(linea, TAM_BUFFER, fp) != NULL) {
 			// Copiar el contenido de la linea para no modificar la original
             char contenido[TAM_BUFFER];
             strncpy(contenido, linea, TAM_BUFFER);
@@ -103,9 +103,11 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			
 			if (strcmp(usuario_linea, usuario) == 0) {
             	printf("Usuario encontrado: %s\n", usuario_linea);
-				strncpy(salida, linea, TAM_BUFFER);
-            	break; 
-        	}
+				strncpy(salida, linea, TAM_BUFFER); 
+        	} else {
+				printf("Usuario no encontrado.\n");
+				snprintf(respuesta, TAM_BUFFER, "%s: no such user\n");
+			}
 		}
 		pclose(fp);
 		printf("Salida obtenida: %s\n", salida);
