@@ -117,7 +117,7 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			return;
 		}
 		// Saltar los campos que no nos interesan
-		for (int i = 0; i < 3; i++) separador = strtok(NULL, ":");
+		for (int i = 0; i < 4; i++) separador = strtok(NULL, ":");
 		// Quinto campo: nombre
 		if (separador != NULL) {
 			strncpy(name, separador, TAM_BUFFER);
