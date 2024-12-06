@@ -70,8 +70,8 @@ void procesar_peticion(int s, char *usuario) {
 		char shell[TAM_BUFFER];
 		char tty[TAM_BUFFER];
 		char ip[TAM_BUFFER];
-		char time[TAM_BUFFER];
 		char date[TAM_BUFFER];
+		char time[TAM_BUFFER];
 		char mail[TAM_BUFFER] = "No mail.";
 		char plan[TAM_BUFFER] = "No plan.";
 		char infoConexion[TAM_BUFFER]; 
@@ -203,23 +203,153 @@ void procesar_peticion(int s, char *usuario) {
 
 	} else { // Petición vacía
 		// Finger con todos los usuarios locales del sistema.
-		// char login[TAM_BUFFER];
-		// char name[TAM_BUFFER];
-		// char tty[TAM_BUFFER];
-		// char idleTime[TAM_BUFFER];
-		// char loginTime[TAM_BUFFER];
-		// char office[TAM_BUFFER];
-		// char phone[TAM_BUFFER];
+		char login[TAM_BUFFER];
+		char name[TAM_BUFFER];
+		char tty[TAM_BUFFER];
+		char idleTime[TAM_BUFFER];
+		char date[TAM_BUFFER];
+		char loginTime[TAM_BUFFER];
+		char office[TAM_BUFFER];
+		char phone[TAM_BUFFER];
+
+		// Obtener información de todos los usuarios.
+		char comando[TAM_BUFFER];
+		char salida[TAM_BUFFER];
+		char linea[TAM_BUFFER];		
 
 		// // Obtener información de todos los usuarios.
-		// char comando[TAM_BUFFER];
-		// char salida[TAM_BUFFER];
-		// char linea[TAM_BUFFER];		
+		FILE *fp; 
+		if((fp = popen("who", "r")) == NULL) {
+			printf("Error al ejecutar el comando who.\n");
+			return;
+		}
+		// Construir la respuesta.
+		snprintf(respuesta, TAM_BUFFER, "Login\tName\tTty\tIdle\tLogin Time\tOffice\tOffice Phone\n");
 
-		// // Obtener información de todos los usuarios.
-		// // ...
-		// // Construir la respuesta.
-		// // ... 
+		if (send(s, respuesta, strlen(respuesta), 0) != strlen(respuesta)) {
+			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+		}
+		// Leer la salida del comando y coger el primer campo (login)
+		while(fgets(linea, TAM_BUFFER, fp) != NULL) {
+			// Extraer el primer campo (login)
+			char *user = strtok(salida_who, " ");
+			if (user != NULL) {
+				// Obtener datos del usuario
+				FILE *fp; 
+				snprintf(comando, TAM_BUFFER, "getent passwd %s", user);
+				if((fp = popen(comando, "r")) == NULL) {
+					printf("Error al ejecutar el comando getent.\n");
+					return;
+				}
+				// Leer la salida del comando
+				if(fgets(linea, TAM_BUFFER, fp) != NULL) {
+					// Copiar el contenido de la linea para no modificar la original
+					char contenido[TAM_BUFFER];
+					strncpy(contenido, linea, TAM_BUFFER);
+
+					// Eliminar el salto de línea al final de la línea
+					contenido[strcspn(contenido, "\n")] = '\0'; // Eliminar el '\n' 
+					
+					// Obtener el primer campo de la línea (usuario) hasta el primer ':'
+					char *usuario_linea = strtok(contenido, ":");
+					
+					if (strcmp(usuario_linea, user) == 0) {
+						printf("Usuario encontrado: %s\n", usuario_linea);
+						strncpy(salida, linea, TAM_BUFFER); 
+					} else {
+						printf("Usuario no encontrado.\n");
+						snprintf(respuesta, TAM_BUFFER, "%s: no such user\n");
+					}
+				}
+				pclose(fp);
+				printf("Salida obtenida: %s\n", salida);
+				// Obtener los campos de la salida: 
+				char *separador; 
+				if ((separador = strtok(salida, ":")) != NULL) {
+					strncpy(login, separador, TAM_BUFFER); 
+				} else {
+					printf("Error al obtener el login del usuario.\n");
+					return;
+				}
+				// Saltar los campos que no nos interesan
+				for (int i = 0; i < 4; i++) separador = strtok(NULL, ":");
+				// Quinto campo: nombre
+				if (separador != NULL) {
+					strncpy(name, separador, TAM_BUFFER);
+				} else {
+					printf("Error al obtener el nombre del usuario.\n");
+					return;
+				}
+				// Sexto campo: directorio
+				if ((separador = strtok(NULL, ":")) != NULL) {
+					strncpy(directory, separador, TAM_BUFFER);
+				} else {
+					printf("Error al obtener el directorio del usuario.\n");
+					return;
+				}
+				// Séptimo campo: shell;
+				if ((separador = strtok(NULL, ":")) != NULL) {
+					strncpy(shell, separador, TAM_BUFFER);
+				} else {
+					printf("Error al obtener el shell del usuario.\n");
+					return;
+				}
+
+				// Obtenemos los campos TTY, IP, Time
+				snprintf(comando, TAM_BUFFER, "lastlog -u %s", user);
+				if ((fp = popen(comando, "r")) == NULL) {
+					printf("Error al ejecutar el comando lastlog.\n");
+					return;
+				}
+				// Ignorar la primera línea (encabezado)
+				fgets(salida, TAM_BUFFER, fp);
+				// Leer la salida del comando
+				if (fgets(salida,TAM_BUFFER, fp) == NULL) {
+					printf("Error al leer la salida de lastlog.\n");
+					pclose(fp);
+					return;
+				}
+				pclose(fp);
+				// Parsear la línea obtenida
+				separador = strtok(salida, " \t"); // Ignorar el campo del Login
+				// Segundo campo (TTY)
+				if ((separador = strtok(NULL, " \t")) != NULL) {
+					strncpy(tty, separador, TAM_BUFFER);
+				} else {
+					printf("Error al obtener el TTY del usuario.\n");
+					return;
+				}
+				// Tercer campo (Office)
+				if ((separador = strtok(NULL, " \t")) != NULL) {
+					strncpy(office, separador, TAM_BUFFER);
+				} else {
+					printf("Error al obtener el campo Office del usuario.\n");
+					return;
+				}
+				// Cuarto campo (Time)
+				if ((separador = strtok(NULL, "\n")) != NULL) {
+					strncpy(date, separador, TAM_BUFFER);
+				} else {
+					printf("Error al obtener la fecha del usuario.\n");
+					return;
+				}
+				char *mes = strtok(date, " "); // Eliminar el dia de la semana
+				// Formatear la fecha para que solo incluya hasta los minutos (HH:MM)
+				int longitudFecha = strcspn(date, ":") + 3;
+				strncpy(loginTime, date, longitudFecha);
+				loginTime[longitudFecha] = '\0'; 
+
+				idleTime = " ";
+				phone = " ";
+
+				// Construir la respuesta.
+				snprintf(respuesta, TAM_BUFFER, "%s %s %s %s %s %s %s\n", login, name, tty, idleTime, loginTime, office, phone);
+
+				if (send(s, respuesta, strlen(respuesta), 0) != strlen(respuesta)) {
+					fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+				}
+			}
+		}
     }
 }
 
