@@ -83,7 +83,7 @@ char *argv[];
         if (strcmp(peticion, "\r\n") == 0) {
             strcpy(usuario, "");
         } else { // Si no, ysuario = peticion 
-            strcpy(usuario, peticion)
+            strcpy(usuario, peticion);
         }
     }
 

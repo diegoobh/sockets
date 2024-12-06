@@ -128,10 +128,10 @@ char * procesar_peticion(const char *usuario) {
 
 		// Construir la respuesta.
 		sprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
-		sprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n
-							  Directory: %s\t\t\t\tShell: %s\n
-							  %s\n
-							  %s\n
+		sprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n \
+							  Directory: %s\t\t\t\tShell: %s\n \
+							  %s\n \
+							  %s\n \
 							  %s\r\n", 
 							  login, name, directory, shell, 
 							  infoConexion, mail, plan);
@@ -464,7 +464,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	while (len = recv(s, buf, TAM_BUFFER, 0)) {
         if (len == -1) errout(hostname);
         buf[len] = '\0'; // Asegurar terminación de la cadena.
-        strncpy(respuesta_TCP, procesar_peticion(buffer), TAM_BUFFER - 1);
+        strncpy(respuesta_TCP, procesar_peticion(buf), TAM_BUFFER - 1);
 		respuesta_TCP[TAM_BUFFER - 1] = '\0'; // Asegurar terminación
 
 		if (send(s, respuesta_TCP, strlen(respuesta_TCP), 0) != strlen(respuesta_TCP)) {
