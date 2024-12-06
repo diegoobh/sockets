@@ -232,7 +232,7 @@ void procesar_peticion(int s, char *usuario) {
 		// Leer la salida del comando y coger el primer campo (login)
 		while(fgets(linea, TAM_BUFFER, fp) != NULL) {
 			// Extraer el primer campo (login)
-			char *user = strtok(salida_who, " ");
+			char *user = strtok(linea, " ");
 			if (user != NULL) {
 				// Obtener datos del usuario
 				FILE *fp; 
@@ -280,20 +280,20 @@ void procesar_peticion(int s, char *usuario) {
 					printf("Error al obtener el nombre del usuario.\n");
 					return;
 				}
-				// Sexto campo: directorio
-				if ((separador = strtok(NULL, ":")) != NULL) {
-					strncpy(directory, separador, TAM_BUFFER);
-				} else {
-					printf("Error al obtener el directorio del usuario.\n");
-					return;
-				}
-				// Séptimo campo: shell;
-				if ((separador = strtok(NULL, ":")) != NULL) {
-					strncpy(shell, separador, TAM_BUFFER);
-				} else {
-					printf("Error al obtener el shell del usuario.\n");
-					return;
-				}
+				// // Sexto campo: directorio
+				// if ((separador = strtok(NULL, ":")) != NULL) {
+				// 	strncpy(directory, separador, TAM_BUFFER);
+				// } else {
+				// 	printf("Error al obtener el directorio del usuario.\n");
+				// 	return;
+				// }
+				// // Séptimo campo: shell;
+				// if ((separador = strtok(NULL, ":")) != NULL) {
+				// 	strncpy(shell, separador, TAM_BUFFER);
+				// } else {
+				// 	printf("Error al obtener el shell del usuario.\n");
+				// 	return;
+				// }
 
 				// Obtenemos los campos TTY, IP, Time
 				snprintf(comando, TAM_BUFFER, "lastlog -u %s", user);
@@ -339,8 +339,8 @@ void procesar_peticion(int s, char *usuario) {
 				strncpy(loginTime, date, longitudFecha);
 				loginTime[longitudFecha] = '\0'; 
 
-				idleTime = " ";
-				phone = " ";
+				sprinf(idleTime, TAM_BUFFER, " ");
+				sprinf(phone, TAM_BUFFER, " ");
 
 				// Construir la respuesta.
 				snprintf(respuesta, TAM_BUFFER, "%s %s %s %s %s %s %s\n", login, name, tty, idleTime, loginTime, office, phone);
