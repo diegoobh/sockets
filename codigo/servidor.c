@@ -40,16 +40,19 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in);
 void errout(char *);		/* declare error out routine */
-char * procesar_peticion(const char *usuario);
+char * procesar_peticion(char *usuario);
 
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
 
-char * procesar_peticion(const char *usuario) {
+char * procesar_peticion(char *usuario) {
 
 	char respuesta[TAM_BUFFER];
 
-    if (strlen(usuario) != 0) { 
+	printf("Entro funcion");
+
+    if (usuario != NULL) { 
+		printf("Usuario no vacio");
 		// Finger con el usuario solicitado en la petición.
 		char login[TAM_BUFFER];
 		char name[TAM_BUFFER];
@@ -135,6 +138,8 @@ char * procesar_peticion(const char *usuario) {
 							  %s\r\n", 
 							  login, name, directory, shell, 
 							  infoConexion, mail, plan);
+		
+		printf("Enviando respuesta: %s\n", respuesta);
 
 		return respuesta;
 
@@ -469,7 +474,12 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 		// Usuario recibido en la petición.
 		printf("Usuario recibido: %s\n", buf);
 
-        strncpy(respuesta_TCP, procesar_peticion(buf), TAM_BUFFER - 1);
+		char *resultado; 
+		resultado = procesar_peticion(buf);
+
+		printf("Peticion hecha");
+
+		strcpy(respuesta_TCP, resultado);
 		respuesta_TCP[TAM_BUFFER - 1] = '\0'; // Asegurar terminación
 
 		// Respuesta a mandar 
