@@ -59,6 +59,7 @@ char * procesar_peticion(const char *usuario) {
 		char tty[TAM_BUFFER];
 		char ip[TAM_BUFFER];
 		char time[TAM_BUFFER];
+		char date[TAM_BUFFER];
 		char mail[TAM_BUFFER] = "No mail.";
 		char plan[TAM_BUFFER] = "No plan.";
 		char infoConexion[TAM_BUFFER]; 
@@ -69,7 +70,7 @@ char * procesar_peticion(const char *usuario) {
 
 		// Obtenemos los campos Login, Name, Directory, Shell
 		snprintf(comando, TAM_BUFFER, "getent passwd %s", usuario); 
-		FILE *fp = popen(command, "r");
+		FILE *fp = popen(comando, "r");
 		if (fp == NULL) {
 			perror("Error al ejecutar el comando");
 			return 1;
@@ -113,18 +114,18 @@ char * procesar_peticion(const char *usuario) {
 		}
 		pclose(fp);
 		// Parsear la línea obtenida
-		separador = strtok(buffer, " \t"); // Ignorar el campo del Login
+		separador = strtok(salida, " \t"); // Ignorar el campo del Login
 		separador = strtok(NULL, " \t");   // Segundo campo (TTY)
 		if (separador != NULL) strncpy(tty, separador, TAM_BUFFER);
 		separador = strtok(NULL, " \t");   // Tercer campo (IP)
 		if (separador != NULL) strncpy(ip, separador, TAM_BUFFER);
 		// Cuarto campo (Time)
 		separador = strtok(NULL, "\n"); // Lee hasta final de línea
-		if (separador != NULL) strncpy(time, separador, TAM_BUFFER);
+		if (separador != NULL) strncpy(date, separador, TAM_BUFFER);
 		// Formatear la fecha para que solo incluya hasta los minutos
-		int longitudFecha = strcspn(time, ":") + 3; // Incluye la posición de ':' más 2 caracteres (HH:MM)
-		strncpy(date, time, longitudFecha);
-		date[longitudFecha] = '\0';
+		int longitudFecha = strcspn(date, ":") + 3; // Incluye la posición de ':' más 2 caracteres (HH:MM)
+		strncpy(time, date, longitudFecha);
+		time[longitudFecha] = '\0';
 
 		// Construir la respuesta.
 		sprintf(infoConexion. "On since %s on %s from %s", time, tty, ip);
