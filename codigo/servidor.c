@@ -56,11 +56,15 @@ void procesar_peticion(int s, char *usuario) {
 		usuario[len - 2] = '\0';  // Eliminar el retorno de carro '\r' si existe
 	}
 
+	if(usuario[0] == '\0') {
+		usuario = NULL; // Petición vacía
+	}
+
 	printf("Entro funcion usuario: %s\n", usuario); 
 
 	char respuesta[TAM_BUFFER];
 
-    if (strlen(usuario) > 0) { // Petición no vacía
+    if (usuario != NULL) { // Petición no vacía
 		printf("Usuario no vacio\n");
 
 		// Finger con el usuario solicitado en la petición.
@@ -281,20 +285,6 @@ void procesar_peticion(int s, char *usuario) {
 					printf("Error al obtener el nombre del usuario.\n");
 					return;
 				}
-				// // Sexto campo: directorio
-				// if ((separador = strtok(NULL, ":")) != NULL) {
-				// 	strncpy(directory, separador, TAM_BUFFER);
-				// } else {
-				// 	printf("Error al obtener el directorio del usuario.\n");
-				// 	return;
-				// }
-				// // Séptimo campo: shell;
-				// if ((separador = strtok(NULL, ":")) != NULL) {
-				// 	strncpy(shell, separador, TAM_BUFFER);
-				// } else {
-				// 	printf("Error al obtener el shell del usuario.\n");
-				// 	return;
-				// }
 
 				// Obtenemos los campos TTY, IP, Time
 				snprintf(comando, TAM_BUFFER, "lastlog -u %s", user);
@@ -340,7 +330,32 @@ void procesar_peticion(int s, char *usuario) {
 				strncpy(loginTime, date, longitudFecha);
 				loginTime[longitudFecha] = '\0'; 
 
-				snprintf(idleTime, TAM_BUFFER, " ");
+				// Obtener el tiempo de actividad del usuario
+				snprintf(comando, TAM_BUFFER, "w | grep %s", user);
+				if ((fp = popen(comando, "r")) == NULL) {
+					printf("Error al ejecutar el comando w.\n");
+					return;
+				} 
+				// Leer la salida del comando
+				if (fgets(salida, TAM_BUFFER, fp) == NULL) {
+					printf("Error al leer la salida de w.\n");
+					pclose(fp);
+					return;
+				}
+				pclose(fp);
+				// Extraer el valor del campo IDLE
+				char *token = strtok(salida, " ");
+				int i = 0;
+				while (token != NULL) {
+					i++;
+					if (i == 5) { // La columna IDLE está en la quinta posición
+						strncpy(idleTime, token, TAM_BUFFER - 1);
+						idleTime[TAM_BUFFER - 1] = '\0'; // Asegurar que termina en null
+						break;
+					}
+					token = strtok(NULL, " ");
+				}
+				
 				snprintf(phone, TAM_BUFFER, " ");
 
 				// Construir la respuesta.
