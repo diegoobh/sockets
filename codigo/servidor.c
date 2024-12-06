@@ -51,7 +51,7 @@ void procesar_peticion(int s, char *usuario) {
 
 	char respuesta[TAM_BUFFER];
 
-    if (strcmp(usuario, '\r\n') != 0) { // Petición no vacía
+    if (strcmp(usuario, "\r\n") != 0) { // Petición no vacía
 		printf("Usuario no vacio\n");
 
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'

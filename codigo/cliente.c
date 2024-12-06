@@ -87,6 +87,8 @@ char *argv[];
         }
     }
 
+    printf("Usuario: %s\n", usuario);
+
     if (strcmp(argv[1], "TCP") == 0) {
         /* Create the socket. */
         s = socket (AF_INET, SOCK_STREAM, 0);
