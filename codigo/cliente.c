@@ -165,7 +165,7 @@ char *argv[];
             exit(1);
         }
 
-        fprintf(stderr, "Mensaje enviado: %s\n", usuario);
+        printf("Mensaje enviado: %s\n", usuario);
 
         /* Now, start receiving all of the replys from the server.
         * This loop will terminate when the recv returns zero,
@@ -180,7 +180,7 @@ char *argv[];
                 exit(1);
             }
             respuesta_TCP[i] = '\0';
-            printf("%s", respuesta_TCP);
+            printf("Resuesta del servidor: \n%s", respuesta_TCP);
         }
 
         /* Print message indicating completion of task. */

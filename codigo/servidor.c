@@ -72,13 +72,13 @@ char * procesar_peticion(const char *usuario) {
 		FILE *fp = popen(comando, "r");
 		if (fp == NULL) {
 			perror("Error al ejecutar el comando");
-			return 1;
+			return NULL;
 		}
 		// Leer la salida del comando
 		if (fgets(salida, TAM_BUFFER, fp) == NULL) {
 			fprintf(stderr, "Usuario no encontrado o error al leer la salida.\n");
 			pclose(fp);
-			return 1;
+			return NULL;
 		}
 		pclose(fp);
 		// Obtener los campos de la salida: 
@@ -101,7 +101,7 @@ char * procesar_peticion(const char *usuario) {
 		fp = popen(comando, "r");
 		if (fp == NULL) {
 			perror("Error al ejecutar el comando");
-			return 1;
+			return NULL;
 		}
 		// Ignorar la primera línea (encabezado)
     	fgets(salida, TAM_BUFFER, fp);
@@ -109,7 +109,7 @@ char * procesar_peticion(const char *usuario) {
 		if (fgets(salida,TAM_BUFFER, fp) == NULL) {
 			fprintf(stderr, "Usuario no encontrado o error al leer la salida.\n");
 			pclose(fp);
-			return 1;
+			return NULL;
 		}
 		pclose(fp);
 		// Parsear la línea obtenida
@@ -127,8 +127,8 @@ char * procesar_peticion(const char *usuario) {
 		time[longitudFecha] = '\0';
 
 		// Construir la respuesta.
-		sprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
-		sprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n \
+		sprintf(infoConexion, "On since %s on %s from %s", time, tty, ip);
+		sprintf(respuesta, "\nLogin: %s\t\t\t\t\tName: %s\n \
 							  Directory: %s\t\t\t\tShell: %s\n \
 							  %s\n \
 							  %s\n \
@@ -139,21 +139,22 @@ char * procesar_peticion(const char *usuario) {
 		return respuesta;
 
 	} else { // Petición vacía
-		// Finger con todos los usuarios locales del sistema.
-		char login[TAM_BUFFER];
-		char name[TAM_BUFFER];
-		char tty[TAM_BUFFER];
-		char idleTime[TAM_BUFFER];
-		char loginTime[TAM_BUFFER];
-		char office[TAM_BUFFER];
-		char phone[TAM_BUFFER];
+		// // Finger con todos los usuarios locales del sistema.
+		// char login[TAM_BUFFER];
+		// char name[TAM_BUFFER];
+		// char tty[TAM_BUFFER];
+		// char idleTime[TAM_BUFFER];
+		// char loginTime[TAM_BUFFER];
+		// char office[TAM_BUFFER];
+		// char phone[TAM_BUFFER];
 
-		// Obtener información de todos los usuarios.
-		// ...
-		// Construir la respuesta.
-		// ... 
+		// // Obtener información de todos los usuarios.
+		// // ...
+		// // Construir la respuesta.
+		// // ... 
 
-		return respuesta;
+		// return respuesta;
+		return NULL; 
     }
 }
 
@@ -464,8 +465,15 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	while (len = recv(s, buf, TAM_BUFFER, 0)) {
         if (len == -1) errout(hostname);
         buf[len] = '\0'; // Asegurar terminación de la cadena.
+
+		// Usuario recibido en la petición.
+		printf("Usuario recibido: %s\n", buf);
+
         strncpy(respuesta_TCP, procesar_peticion(buf), TAM_BUFFER - 1);
 		respuesta_TCP[TAM_BUFFER - 1] = '\0'; // Asegurar terminación
+
+		// Respuesta a mandar 
+		printf("Respuesta a enviar: %s\n", respuesta_TCP);
 
 		if (send(s, respuesta_TCP, strlen(respuesta_TCP), 0) != strlen(respuesta_TCP)) {
 			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
