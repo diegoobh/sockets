@@ -561,8 +561,8 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
       memset (&hints, 0, sizeof (hints));
       hints.ai_family = AF_INET;
 
-	strncpy(respuesta_UDP, procesar_peticion(buffer), TAM_BUFFER - 1);
-	respuesta_UDP[TAM_BUFFER - 1] = '\0'; // Asegurar terminación
+	procesar_peticion(buffer, respuesta_UDP); // Almacenamos en respuesta_UDP el resultado
+
     nc = sendto(s, respuesta_UDP, strlen(respuesta_UDP), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 
 	if ( nc == -1) {
