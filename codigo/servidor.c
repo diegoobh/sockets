@@ -47,21 +47,21 @@ void finalizar(){ FIN = 1; }
 
 void procesar_peticion(int s, char *usuario) {
 
+	// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
+	size_t len = strlen(usuario);
+	if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r')) {
+		usuario[len - 1] = '\0';  // Eliminar el salto de línea '\n'
+	}
+	if (len > 1 && usuario[len - 2] == '\r') {
+		usuario[len - 2] = '\0';  // Eliminar el retorno de carro '\r' si existe
+	}
+
 	printf("Entro funcion usuario: %s\n", usuario); 
 
 	char respuesta[TAM_BUFFER];
 
-    if (usuario != NULL) { 
+    if (strlen(usuario) > 0) { // Petición no vacía
 		printf("Usuario no vacio\n");
-
-		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
-        size_t len = strlen(usuario);
-        if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r')) {
-            usuario[len - 1] = '\0';  // Eliminar el salto de línea '\n'
-        }
-        if (len > 1 && usuario[len - 2] == '\r') {
-            usuario[len - 2] = '\0';  // Eliminar el retorno de carro '\r' si existe
-        }
 
 		// Finger con el usuario solicitado en la petición.
 		char login[TAM_BUFFER];
@@ -202,6 +202,7 @@ void procesar_peticion(int s, char *usuario) {
 		}
 
 	} else { // Petición vacía
+		printf("Petición vacía\n");
 		// Finger con todos los usuarios locales del sistema.
 		char login[TAM_BUFFER];
 		char name[TAM_BUFFER];
@@ -339,8 +340,8 @@ void procesar_peticion(int s, char *usuario) {
 				strncpy(loginTime, date, longitudFecha);
 				loginTime[longitudFecha] = '\0'; 
 
-				snprinf(idleTime, TAM_BUFFER, " ");
-				snprinf(phone, TAM_BUFFER, " ");
+				snprintf(idleTime, TAM_BUFFER, " ");
+				snprintf(phone, TAM_BUFFER, " ");
 
 				// Construir la respuesta.
 				snprintf(respuesta, TAM_BUFFER, "%s %s %s %s %s %s %s\n", login, name, tty, idleTime, loginTime, office, phone);
