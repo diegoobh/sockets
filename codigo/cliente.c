@@ -81,8 +81,8 @@ char *argv[];
 
         // Verificar la peticion es solo \r\n usuario vacío 
         if (strcmp(peticion, "\r\n") == 0) {
-            strcpy(usuario, "");
-        } else { // Si no, ysuario = peticion 
+            strcpy(usuario, "\r\n");
+        } else { // Si no, usuario = peticion 
             strcpy(usuario, peticion);
         }
     }

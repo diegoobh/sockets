@@ -47,25 +47,21 @@ void finalizar(){ FIN = 1; }
 
 void procesar_peticion(int s, char *usuario) {
 
-	// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
-	size_t len = strlen(usuario);
-	if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r')) {
-		usuario[len - 1] = '\0';  // Eliminar el salto de línea '\n'
-	}
-	if (len > 1 && usuario[len - 2] == '\r') {
-		usuario[len - 2] = '\0';  // Eliminar el retorno de carro '\r' si existe
-	}
-
-	if(usuario[0] == '\0') {
-		usuario = NULL; // Petición vacía
-	}
-
 	printf("Entro funcion usuario: %s\n", usuario); 
 
 	char respuesta[TAM_BUFFER];
 
-    if (usuario != NULL) { // Petición no vacía
+    if (strcmp(usuario, '\r\n') != 0) { // Petición no vacía
 		printf("Usuario no vacio\n");
+
+		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
+		size_t len = strlen(usuario);
+		if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r')) {
+			usuario[len - 1] = '\0';  // Eliminar el salto de línea '\n'
+		}
+		if (len > 1 && usuario[len - 2] == '\r') {
+			usuario[len - 2] = '\0';  // Eliminar el retorno de carro '\r' si existe
+		}
 
 		// Finger con el usuario solicitado en la petición.
 		char login[TAM_BUFFER];
