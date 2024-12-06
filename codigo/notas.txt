@@ -127,6 +127,8 @@ i7507527                                   **Nunca ha accedido**
 i1526100                                   **Nunca ha accedido**
 i3948539                                   **Nunca ha accedido**
 
+//lastlog | grep i9367527
+i9367527         pts/36   81.43.240.32     vie dic  6 11:09:35 +0100 2024
 
 // getent passwd [usuario] - Info adicional a /etc/passwd pero parecido 
 getent passwd i9367527
