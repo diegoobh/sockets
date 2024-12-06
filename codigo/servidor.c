@@ -339,8 +339,8 @@ void procesar_peticion(int s, char *usuario) {
 				strncpy(loginTime, date, longitudFecha);
 				loginTime[longitudFecha] = '\0'; 
 
-				sprinf(idleTime, TAM_BUFFER, " ");
-				sprinf(phone, TAM_BUFFER, " ");
+				snprinf(idleTime, TAM_BUFFER, " ");
+				snprinf(phone, TAM_BUFFER, " ");
 
 				// Construir la respuesta.
 				snprintf(respuesta, TAM_BUFFER, "%s %s %s %s %s %s %s\n", login, name, tty, idleTime, loginTime, office, phone);
