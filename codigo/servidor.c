@@ -128,8 +128,8 @@ char * procesar_peticion(const char *usuario) {
 		time[longitudFecha] = '\0';
 
 		// Construir la respuesta.
-		sprintf(infoConexion. "On since %s on %s from %s", time, tty, ip);
-		sprintf(respuesta, "\nLogin: %s\t\t\t\t\tName: %s\n
+		sprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
+		sprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n
 							  Directory: %s\t\t\t\tShell: %s\n
 							  %s\n
 							  %s\n
