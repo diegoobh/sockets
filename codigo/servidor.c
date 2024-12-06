@@ -47,9 +47,6 @@ void finalizar(){ FIN = 1; }
 
 void procesar_peticion(char *usuario, char *respuesta) {
 
-	// Terminacion de usuario en caracter nulo 
-	usuario[strlen(usuario) - 1] = '\0';
-
 	printf("Entro funcion usuario: %s\n", usuario); 
 
     if (usuario != NULL) { 
