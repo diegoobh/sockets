@@ -47,7 +47,10 @@ void finalizar(){ FIN = 1; }
 
 void procesar_peticion(char *usuario, char *respuesta) {
 
-	printf("Entro funcion\n");
+	// Terminacion de usuario en caracter nulo 
+	usuario[strlen(usuario) - 1] = '\0';
+
+	printf("Entro funcion usuario: %s\n", usuario); 
 
     if (usuario != NULL) { 
 		printf("Usuario no vacio\n");
@@ -67,28 +70,37 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		// Obtener información del usuario.
 		char comando[TAM_BUFFER];
 		char salida[TAM_BUFFER];
+		char linea[TAM_BUFFER];
+
 
 		// Obtenemos los campos Login, Name, Directory, Shell
-		snprintf(comando, TAM_BUFFER, "getent passwd %s", usuario); 
 		FILE *fp; 
-		if((fp = popen(comando, "r")) == NULL) {
-			printf("Error al ejecutar el comando getent.\n");
-			return NULL;
+		if((fp = fopen("/etc/passwd", "r")) == NULL) {
+			printf("Error al abrir el archivo /etc/passwd.\n");
+			return;
 		}
 		// Leer la salida del comando
-		if (fgets(salida, TAM_BUFFER, fp) == NULL) {
-			printf("Usuario no encontrado o error al leer la salida de getent.\n");
-			pclose(fp);
-			return NULL;
+		while(fgets(salida, TAM_BUFFER, fp) != NULL) {
+			// Obtener el primer campo de la linea hasta el primer ':'
+            char *user = strtok(salida, "\n");
+
+			char *usuario_linea = strtok(user, ":");
+			
+
+			if (strcmp(usuario_linea, usuario) == 0) {
+            	printf("Usuario encontrado: %s\n", linea);
+            	fclose(fp);
+        	} else {
+				printf("Salida: %s\n", salida);
+			}
 		}
-		pclose(fp);
 		// Obtener los campos de la salida: 
 		char *separador; 
 		if ((separador = strtok(salida, ":")) != NULL) {
 			strncpy(login, separador, TAM_BUFFER); 
 		} else {
 			printf("Error al obtener el login del usuario.\n");
-			return NULL;
+			return;
 		}
 		// Saltar los campos que no nos interesan
 		for (int i = 0; i < 3; i++) separador = strtok(NULL, ":");
@@ -97,28 +109,28 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			strncpy(name, separador, TAM_BUFFER);
 		} else {
 			printf("Error al obtener el nombre del usuario.\n");
-			return NULL;
+			return;
 		}
 		// Sexto campo: directorio
 		if ((separador = strtok(NULL, ":")) != NULL) {
 			strncpy(directory, separador, TAM_BUFFER);
 		} else {
 			printf("Error al obtener el directorio del usuario.\n");
-			return NULL;
+			return;
 		}
 		// Séptimo campo: shell;
 		if ((separador = strtok(NULL, ":")) != NULL) {
 			strncpy(shell, separador, TAM_BUFFER);
 		} else {
 			printf("Error al obtener el shell del usuario.\n");
-			return NULL;
+			return;
 		}
 
 		// Obtenemos los campos TTY, IP, Time
 		snprintf(comando, TAM_BUFFER, "lastlog -u %s", usuario);
 		if ((fp = popen(comando, "r")) == NULL) {
 			printf("Error al ejecutar el comando lastlog.\n");
-			return NULL;
+			return;
 		}
 		// Ignorar la primera línea (encabezado)
     	fgets(salida, TAM_BUFFER, fp);
@@ -126,7 +138,7 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		if (fgets(salida,TAM_BUFFER, fp) == NULL) {
 			printf("Error al leer la salida de lastlog.\n");
 			pclose(fp);
-			return NULL;
+			return;
 		}
 		pclose(fp);
 		// Parsear la línea obtenida
@@ -136,21 +148,21 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			strncpy(tty, separador, TAM_BUFFER);
 		} else {
 			printf("Error al obtener el TTY del usuario.\n");
-			return NULL;
+			return;
 		}
 		// Tercer campo (IP)
 		if ((separador = strtok(NULL, " \t")) != NULL) {
 			strncpy(ip, separador, TAM_BUFFER);
 		} else {
 			printf("Error al obtener la IP del usuario.\n");
-			return NULL;
+			return;
 		}
 		// Cuarto campo (Time)
 		if ((separador = strtok(NULL, "\n")) != NULL) {
 			strncpy(date, separador, TAM_BUFFER);
 		} else {
 			printf("Error al obtener la fecha del usuario.\n");
-			return NULL;
+			return;
 		}
 		// Formatear la fecha para que solo incluya hasta los minutos
 		int longitudFecha = strcspn(date, ":") + 3; // Incluye la posición de ':' más 2 caracteres (HH:MM)
@@ -158,8 +170,8 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		time[longitudFecha] = '\0';
 
 		// Construir la respuesta.
-		sprintf(infoConexion, "On since %s on %s from %s", time, tty, ip);
-		sprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n \
+		snprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
+		snprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n \
 							  Directory: %s\t\t\t\tShell: %s\n \
 							  %s\n \
 							  %s\n \
