@@ -47,10 +47,10 @@ void finalizar(){ FIN = 1; }
 
 void procesar_peticion(char *usuario, char *respuesta) {
 
-	printf("Entro funcion");
+	printf("Entro funcion\n");
 
     if (usuario != NULL) { 
-		printf("Usuario no vacio");
+		printf("Usuario no vacio\n");
 		// Finger con el usuario solicitado en la petición.
 		char login[TAM_BUFFER];
 		char name[TAM_BUFFER];
@@ -499,7 +499,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 
 		procesar_peticion(buf, respuesta_TCP); // Almacenamos en respuesta_TCP el resultado
 
-		printf("Peticion hecha");
+		printf("Peticion hecha\n");
 
 		// Respuesta a mandar 
 		printf("Respuesta a enviar: %s\n", respuesta_TCP);
