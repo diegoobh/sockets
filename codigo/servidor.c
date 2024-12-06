@@ -84,8 +84,9 @@ void procesar_peticion(char *usuario, char *respuesta) {
 
 		// Obtenemos los campos Login, Name, Directory, Shell
 		FILE *fp; 
-		if((fp = fopen("/etc/passwd", "r")) == NULL) {
-			printf("Error al abrir el archivo /etc/passwd.\n");
+		snprintf(comando, TAM_BUFFER, "getent passwd %s", usuario);
+		if((fp = popen(comando, "r")) == NULL) {
+			printf("Error al ejecutar el comando getent.\n");
 			return;
 		}
 		// Leer la salida del comando
@@ -106,7 +107,7 @@ void procesar_peticion(char *usuario, char *respuesta) {
             	break; 
         	}
 		}
-		fclose(fp);
+		pclose(fp);
 		printf("Salida obtenida: %s\n", salida);
 		// Obtener los campos de la salida: 
 		char *separador; 
