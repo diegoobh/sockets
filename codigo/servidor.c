@@ -72,12 +72,12 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		snprintf(comando, TAM_BUFFER, "getent passwd %s", usuario); 
 		FILE *fp; 
 		if((fp = popen(comando, "r")) == NULL) {
-			perror("Error al ejecutar el comando");
+			printf("Error al ejecutar el comando getent.\n");
 			return NULL;
 		}
 		// Leer la salida del comando
 		if (fgets(salida, TAM_BUFFER, fp) == NULL) {
-			fprintf(stderr, "Usuario no encontrado o error al leer la salida.\n");
+			printf("Usuario no encontrado o error al leer la salida de getent.\n");
 			pclose(fp);
 			return NULL;
 		}
@@ -87,7 +87,7 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		if ((separador = strtok(salida, ":")) != NULL) {
 			strncpy(login, separador, TAM_BUFFER); 
 		} else {
-			fprintf(stderr, "Error al obtener el login del usuario.\n");
+			printf("Error al obtener el login del usuario.\n");
 			return NULL;
 		}
 		// Saltar los campos que no nos interesan
@@ -96,35 +96,35 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		if (separador != NULL) {
 			strncpy(name, separador, TAM_BUFFER);
 		} else {
-			fprintf(stderr, "Error al obtener el nombre del usuario.\n");
+			printf("Error al obtener el nombre del usuario.\n");
 			return NULL;
 		}
 		// Sexto campo: directorio
 		if ((separador = strtok(NULL, ":")) != NULL) {
 			strncpy(directory, separador, TAM_BUFFER);
 		} else {
-			fprintf(stderr, "Error al obtener el directorio del usuario.\n");
+			printf("Error al obtener el directorio del usuario.\n");
 			return NULL;
 		}
 		// Séptimo campo: shell;
 		if ((separador = strtok(NULL, ":")) != NULL) {
 			strncpy(shell, separador, TAM_BUFFER);
 		} else {
-			fprintf(stderr, "Error al obtener el shell del usuario.\n");
+			printf("Error al obtener el shell del usuario.\n");
 			return NULL;
 		}
 
 		// Obtenemos los campos TTY, IP, Time
 		snprintf(comando, TAM_BUFFER, "lastlog -u %s", usuario);
 		if ((fp = popen(comando, "r")) == NULL) {
-			perror("Error al ejecutar el comando");
+			printf("Error al ejecutar el comando lastlog.\n");
 			return NULL;
 		}
 		// Ignorar la primera línea (encabezado)
     	fgets(salida, TAM_BUFFER, fp);
 		// Leer la salida del comando
 		if (fgets(salida,TAM_BUFFER, fp) == NULL) {
-			fprintf(stderr, "Usuario no encontrado o error al leer la salida.\n");
+			printf("Error al leer la salida de lastlog.\n");
 			pclose(fp);
 			return NULL;
 		}
@@ -135,21 +135,21 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		if ((separador = strtok(NULL, " \t")) != NULL) {
 			strncpy(tty, separador, TAM_BUFFER);
 		} else {
-			fprintf(stderr, "Error al obtener el TTY del usuario.\n");
+			printf("Error al obtener el TTY del usuario.\n");
 			return NULL;
 		}
 		// Tercer campo (IP)
 		if ((separador = strtok(NULL, " \t")) != NULL) {
 			strncpy(ip, separador, TAM_BUFFER);
 		} else {
-			fprintf(stderr, "Error al obtener la IP del usuario.\n");
+			printf("Error al obtener la IP del usuario.\n");
 			return NULL;
 		}
 		// Cuarto campo (Time)
 		if ((separador = strtok(NULL, "\n")) != NULL) {
 			strncpy(date, separador, TAM_BUFFER);
 		} else {
-			fprintf(stderr, "Error al obtener la fecha del usuario.\n");
+			printf("Error al obtener la fecha del usuario.\n");
 			return NULL;
 		}
 		// Formatear la fecha para que solo incluya hasta los minutos
