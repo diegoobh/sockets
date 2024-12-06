@@ -40,14 +40,12 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in);
 void errout(char *);		/* declare error out routine */
-char * procesar_peticion(char *usuario);
+void procesar_peticion(char *usuario, char *respuesta);
 
 int FIN = 0;             /* Para el cierre ordenado */
 void finalizar(){ FIN = 1; }
 
-char * procesar_peticion(char *usuario) {
-
-	char respuesta[TAM_BUFFER];
+void procesar_peticion(char *usuario, char *respuesta) {
 
 	printf("Entro funcion");
 
@@ -72,8 +70,8 @@ char * procesar_peticion(char *usuario) {
 
 		// Obtenemos los campos Login, Name, Directory, Shell
 		snprintf(comando, TAM_BUFFER, "getent passwd %s", usuario); 
-		FILE *fp = popen(comando, "r");
-		if (fp == NULL) {
+		FILE *fp; 
+		if((fp = popen(comando, "r")) == NULL) {
 			perror("Error al ejecutar el comando");
 			return NULL;
 		}
@@ -85,24 +83,40 @@ char * procesar_peticion(char *usuario) {
 		}
 		pclose(fp);
 		// Obtener los campos de la salida: 
-		char *separador = strtok(salida, ":");
-		if (separador != NULL) strncpy(login, separador, TAM_BUFFER);
+		char *separador; 
+		if ((separador = strtok(salida, ":")) != NULL) {
+			strncpy(login, separador, TAM_BUFFER); 
+		} else {
+			fprintf(stderr, "Error al obtener el login del usuario.\n");
+			return NULL;
+		}
 		// Saltar los campos que no nos interesan
 		for (int i = 0; i < 3; i++) separador = strtok(NULL, ":");
 		// Quinto campo: nombre
-		if (separador != NULL) strncpy(name, separador, TAM_BUFFER);
+		if (separador != NULL) {
+			strncpy(name, separador, TAM_BUFFER);
+		} else {
+			fprintf(stderr, "Error al obtener el nombre del usuario.\n");
+			return NULL;
+		}
 		// Sexto campo: directorio
-		separador = strtok(NULL, ":");
-		if (separador != NULL) strncpy(directory, separador, TAM_BUFFER);
-		// Séptimo campo: shell
-		separador = strtok(NULL, ":");
-		if (separador != NULL) strncpy(shell, separador, TAM_BUFFER);
+		if ((separador separador = strtok(NULL, ":")) != NULL) {
+			strncpy(directory, separador, TAM_BUFFER);
+		} else {
+			fprintf(stderr, "Error al obtener el directorio del usuario.\n");
+			return NULL;
+		}
+		// Séptimo campo: shell;
+		if ((separador separador = strtok(NULL, ":")) != NULL) {
+			strncpy(shell, separador, TAM_BUFFER);
+		} else {
+			fprintf(stderr, "Error al obtener el shell del usuario.\n");
+			return NULL;
+		}
 
 		// Obtenemos los campos TTY, IP, Time
 		snprintf(comando, TAM_BUFFER, "lastlog -u %s", usuario);
-
-		fp = popen(comando, "r");
-		if (fp == NULL) {
+		if ((fp = popen(comando, "r")) == NULL) {
 			perror("Error al ejecutar el comando");
 			return NULL;
 		}
@@ -117,13 +131,27 @@ char * procesar_peticion(char *usuario) {
 		pclose(fp);
 		// Parsear la línea obtenida
 		separador = strtok(salida, " \t"); // Ignorar el campo del Login
-		separador = strtok(NULL, " \t");   // Segundo campo (TTY)
-		if (separador != NULL) strncpy(tty, separador, TAM_BUFFER);
-		separador = strtok(NULL, " \t");   // Tercer campo (IP)
-		if (separador != NULL) strncpy(ip, separador, TAM_BUFFER);
+		// Segundo campo (TTY)
+		if ((separador = strtok(NULL, " \t")) != NULL) {
+			strncpy(tty, separador, TAM_BUFFER);
+		} else {
+			fprintf(stderr, "Error al obtener el TTY del usuario.\n");
+			return NULL;
+		}
+		// Tercer campo (IP)
+		if ((separador = strtok(NULL, " \t")) != NULL) {
+			strncpy(ip, separador, TAM_BUFFER);
+		} else {
+			fprintf(stderr, "Error al obtener la IP del usuario.\n");
+			return NULL;
+		}
 		// Cuarto campo (Time)
-		separador = strtok(NULL, "\n"); // Lee hasta final de línea
-		if (separador != NULL) strncpy(date, separador, TAM_BUFFER);
+		if ((separador = strtok(NULL, "\n")) != NULL) {
+			strncpy(date, separador, TAM_BUFFER);
+		} else {
+			fprintf(stderr, "Error al obtener la fecha del usuario.\n");
+			return NULL;
+		}
 		// Formatear la fecha para que solo incluya hasta los minutos
 		int longitudFecha = strcspn(date, ":") + 3; // Incluye la posición de ':' más 2 caracteres (HH:MM)
 		strncpy(time, date, longitudFecha);
@@ -131,7 +159,7 @@ char * procesar_peticion(char *usuario) {
 
 		// Construir la respuesta.
 		sprintf(infoConexion, "On since %s on %s from %s", time, tty, ip);
-		sprintf(respuesta, "\nLogin: %s\t\t\t\t\tName: %s\n \
+		sprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n \
 							  Directory: %s\t\t\t\tShell: %s\n \
 							  %s\n \
 							  %s\n \
@@ -140,8 +168,6 @@ char * procesar_peticion(char *usuario) {
 							  infoConexion, mail, plan);
 		
 		printf("Enviando respuesta: %s\n", respuesta);
-
-		return respuesta;
 
 	} else { // Petición vacía
 		// // Finger con todos los usuarios locales del sistema.
@@ -157,9 +183,6 @@ char * procesar_peticion(char *usuario) {
 		// // ...
 		// // Construir la respuesta.
 		// // ... 
-
-		// return respuesta;
-		return NULL; 
     }
 }
 
@@ -474,13 +497,9 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 		// Usuario recibido en la petición.
 		printf("Usuario recibido: %s\n", buf);
 
-		char *resultado; 
-		resultado = procesar_peticion(buf);
+		procesar_peticion(buf, respuesta_TCP); // Almacenamos en respuesta_TCP el resultado
 
 		printf("Peticion hecha");
-
-		strcpy(respuesta_TCP, resultado);
-		respuesta_TCP[TAM_BUFFER - 1] = '\0'; // Asegurar terminación
 
 		// Respuesta a mandar 
 		printf("Respuesta a enviar: %s\n", respuesta_TCP);
