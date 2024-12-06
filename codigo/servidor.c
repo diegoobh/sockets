@@ -54,6 +54,16 @@ void procesar_peticion(char *usuario, char *respuesta) {
 
     if (usuario != NULL) { 
 		printf("Usuario no vacio\n");
+
+		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
+        size_t len = strlen(usuario);
+        if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r')) {
+            usuario[len - 1] = '\0';  // Eliminar el salto de línea '\n'
+        }
+        if (len > 1 && usuario[len - 2] == '\r') {
+            usuario[len - 2] = '\0';  // Eliminar el retorno de carro '\r' si existe
+        }
+
 		// Finger con el usuario solicitado en la petición.
 		char login[TAM_BUFFER];
 		char name[TAM_BUFFER];
@@ -72,7 +82,6 @@ void procesar_peticion(char *usuario, char *respuesta) {
 		char salida[TAM_BUFFER];
 		char linea[TAM_BUFFER];
 
-
 		// Obtenemos los campos Login, Name, Directory, Shell
 		FILE *fp; 
 		if((fp = fopen("/etc/passwd", "r")) == NULL) {
@@ -80,20 +89,24 @@ void procesar_peticion(char *usuario, char *respuesta) {
 			return;
 		}
 		// Leer la salida del comando
-		while(fgets(salida, TAM_BUFFER, fp) != NULL) {
-			// Obtener el primer campo de la linea hasta el primer ':'
-            char *user = strtok(salida, "\n");
+		while(fgets(linea, TAM_BUFFER, fp) != NULL) {
+			// Copiar el contenido de la linea para no modificar la original
+            char contenido[TAM_BUFFER];
+            strncpy(contenido, linea, TAM_BUFFER);
 
-			char *usuario_linea = strtok(user, ":");
+            // Eliminar el salto de línea al final de la línea
+            linea[strcspn(contenido, "\n")] = '\0'; // Eliminar el '\n' 
+            
+            // Obtener el primer campo de la línea (usuario) hasta el primer ':'
+            char *usuario_linea = strtok(contenido, ":");
 			
-
 			if (strcmp(usuario_linea, usuario) == 0) {
-            	printf("Usuario encontrado: %s\n", linea);
+            	printf("Usuario encontrado: %s\n", usuario_linea);
+				strncpy(salida, linea, TAM_BUFFER);
             	fclose(fp);
-        	} else {
-				printf("Salida: %s\n", salida);
-			}
+        	}
 		}
+		printf("Salida obtenida: %s\n", salida);
 		// Obtener los campos de la salida: 
 		char *separador; 
 		if ((separador = strtok(salida, ":")) != NULL) {
@@ -570,8 +583,8 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
 
    	addrlen = sizeof(struct sockaddr_in);
 
-      memset (&hints, 0, sizeof (hints));
-      hints.ai_family = AF_INET;
+    memset (&hints, 0, sizeof (hints));
+    hints.ai_family = AF_INET;
 
 	procesar_peticion(buffer, respuesta_UDP); // Almacenamos en respuesta_UDP el resultado
 
