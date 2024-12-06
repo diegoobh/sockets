@@ -20,7 +20,6 @@ extern int errno;
 // Defines cliente UDP
 #define ADDRNOTFOUND	0xffffffff
 #define RETRIES	5
-#define BUFFERSIZE	1024
 #define PUERTO 7527
 #define TIMEOUT 6
 #define MAXHOST 512
@@ -257,7 +256,7 @@ char *argv[];
 
             alarm(TIMEOUT);
 
-            if ((cc = recvfrom(s, respuesta_UDP, BUFFERSIZE-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
+            if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                 if (errno == EINTR) {
                     printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
                     n_retry--;

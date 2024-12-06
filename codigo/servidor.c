@@ -22,7 +22,6 @@
 
 #define PUERTO 7527
 #define ADDRNOTFOUND	0xffffffff	/* return address for unfound host */
-#define BUFFERSIZE	1024	/* maximum size of packets to be received */
 #define TAM_BUFFER 516
 #define MAXHOST 128
 
@@ -177,7 +176,7 @@ char *argv[];
     fd_set readmask;
     int numfds,s_mayor;
     
-    char buffer[BUFFERSIZE];	/* buffer for packets to be read into */
+    char buffer[TAM_BUFFER];	/* buffer for packets to be read into */
     
     struct sigaction vec;
 
@@ -356,11 +355,11 @@ char *argv[];
                 * request arrives.  Then, it will
                 * return the address of the client,
                 * and a buffer containing its request.
-                * BUFFERSIZE - 1 bytes are read so that
+                * TAM_BUFFER - 1 bytes are read so that
                 * room is left at the end of the buffer
                 * for a null character.
                 */
-                cc = recvfrom(s_UDP, buffer, BUFFERSIZE - 1, 0,
+                cc = recvfrom(s_UDP, buffer, TAM_BUFFER - 1, 0,
                    (struct sockaddr *)&clientaddr_in, &addrlen);
                 if ( cc == -1) {
                     perror(argv[0]);
@@ -465,7 +464,8 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	while (len = recv(s, buf, TAM_BUFFER, 0)) {
         if (len == -1) errout(hostname);
         buf[len] = '\0'; // Asegurar terminación de la cadena.
-        respuesta_TCP = procesar_peticion(buf);
+        strncpy(respuesta_TCP, procesar_peticion(buffer), TAM_BUFFER - 1);
+		respuesta_TCP[TAM_BUFFER - 1] = '\0'; // Asegurar terminación
 
 		if (send(s, respuesta_TCP, strlen(respuesta_TCP), 0) != strlen(respuesta_TCP)) {
 			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
@@ -515,7 +515,7 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
 
     struct addrinfo hints, *res;
 
-	char respuesta_UDP[BUFFERSIZE];
+	char respuesta_UDP[TAM_BUFFER];
 
 	int addrlen;
 
@@ -524,7 +524,8 @@ void serverUDP(int s, char * buffer, struct sockaddr_in clientaddr_in)
       memset (&hints, 0, sizeof (hints));
       hints.ai_family = AF_INET;
 
-	respuesta_UDP = procesar_peticion(buffer);
+	strncpy(respuesta_UDP, procesar_peticion(buffer), TAM_BUFFER - 1);
+	respuesta_UDP[TAM_BUFFER - 1] = '\0'; // Asegurar terminación
     nc = sendto(s, respuesta_UDP, strlen(respuesta_UDP), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 
 	if ( nc == -1) {
