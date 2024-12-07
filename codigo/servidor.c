@@ -38,7 +38,8 @@ extern int errno;
 void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in);
 void errout(char *); /* declare error out routine */
-void procesar_peticion(int s, char *buf);
+void procesar_peticion_TCP(int s, char *buf);
+void procesar_peticion_UDP(int s, char *buf);
 
 int FIN = 0; /* Para el cierre ordenado */
 void finalizar() { FIN = 1; }
@@ -254,7 +255,7 @@ char * devuelveinf(char *user)
 	return respuesta;
 }
 
-void procesar_peticion(int s, char *usuario)
+void procesar_peticion_TCP(int s, char *usuario)
 {
 	printf("Entro funcion usuario: %s\n", usuario);
 	char respuesta[TAM_BUFFER];
@@ -316,7 +317,71 @@ void procesar_peticion(int s, char *usuario)
 	}
 }
 
+void procesar_peticion_UDP(int s, char *usuario)
+{
+	printf("Entro funcion usuario: %s\n", usuario);
+	char respuesta[TAM_BUFFER];
+	int nc;
 
+	if (strcmp(usuario, "\r\n") != 0){ // Petición no vacía
+		printf("Usuario no vacio\n");
+
+		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
+		size_t len = strlen(usuario);
+		if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r'))
+		{
+			usuario[len - 1] = '\0'; // Eliminar el salto de línea '\n'
+		}
+		if (len > 1 && usuario[len - 2] == '\r')
+		{
+			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
+		}
+
+		char *respuesta = devuelveinf(usuario);
+		
+		printf("Respuesta: %s\n", respuesta);
+		printf("Enviando respuesta...\n");
+
+		if (send(s, respuesta, strlen(respuesta), 0) != strlen(respuesta))
+		{
+			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+		}
+	} else { // Petición vacía
+		printf("Petición vacía.\n");
+        char linea[TAM_BUFFER];
+
+		// // Obtener información de todos los usuarios.
+		FILE *fp;
+		if ((fp = popen("who", "r")) == NULL)
+		{
+			printf("Error al ejecutar el comando who.\n");
+			return;
+		}
+		
+		// Leer la salida del comando y coger el primer campo (login)
+		memset(linea, 0, TAM_BUFFER);
+		while (fgets(linea, TAM_BUFFER, fp) != NULL)
+		{
+			printf("Leyendo línea: %s\n", linea);
+			// Extraer el primer campo (login)
+			char *user = strtok(linea, " ");
+			printf("Usuario: %s\n", user);
+			if (user != NULL)
+			{
+				// Obtener datos del usuario
+				char *respuesta = devuelveinf(user);
+
+				nc = sendto(s, respuesta, strlen(respuesta), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+				if (nc == -1)
+				{
+					perror("serverUDP");
+					printf("%s: sendto error\n", "serverUDP");
+					return;
+				}
+			}
+		}
+	}
+}
 
 int main(argc, argv)
 int argc;
@@ -537,7 +602,7 @@ char *argv[];
 					 * room is left at the end of the buffer
 					 * for a null character.
 					 */
-					cc = recvfrom(s_UDP, buffer, TAM_BUFFER - 1, 0,
+					cc = recvfrom(s_UDP, buffer, TAM_BUFFER, 0, // TAM_BUFFER - 1
 								  (struct sockaddr *)&clientaddr_in, &addrlen);
 					if (cc == -1)
 					{
@@ -548,7 +613,7 @@ char *argv[];
 					/* Make sure the message received is
 					 * null terminated.
 					 */
-					buffer[cc] = '\0';
+					//buffer[cc] = '\0';
 					serverUDP(s_UDP, buffer, clientaddr_in);
 				}
 			}
@@ -646,7 +711,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 			errout(hostname);
 		printf("Mensaje recibido: %s\n", buf);
 
-		procesar_peticion(s, buf); // Almacenamos en respuesta_TCP el resultado
+		procesar_peticion_TCP(s, buf);
 
 		reqcnt++;
 	}
@@ -687,11 +752,8 @@ void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in)
 {
 	struct in_addr reqaddr; /* for requested host's address */
 	struct hostent *hp;		/* pointer to host info for requested host */
-	int nc, errcode;
 
 	struct addrinfo hints, *res;
-
-	char respuesta_UDP[TAM_BUFFER];
 
 	int addrlen;
 
@@ -700,15 +762,5 @@ void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in)
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 
-	// Hacer la funcion compatible con UDP
-	procesar_peticion(s, buffer); // Almacenamos en respuesta_UDP el resultado
-
-	nc = sendto(s, respuesta_UDP, strlen(respuesta_UDP), 0, (struct sockaddr *)&clientaddr_in, addrlen);
-
-	if (nc == -1)
-	{
-		perror("serverUDP");
-		printf("%s: sendto error\n", "serverUDP");
-		return;
-	}
+	procesar_peticion_UDP(s, buffer);
 }

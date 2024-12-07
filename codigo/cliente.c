@@ -94,8 +94,6 @@ char *argv[];
 		{
 			hostname[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
-
-        printf("Host: %s\n", hostname);
         
     } else {
         // Si no hay @, hostname = localhost
@@ -113,6 +111,7 @@ char *argv[];
     }
 
     printf("Usuario: %s\n", usuario);
+    printf("Host: %s\n", hostname);
 
     if (strcmp(argv[1], "TCP") == 0) {
         /* Create the socket. */
