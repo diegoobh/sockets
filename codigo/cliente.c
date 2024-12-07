@@ -52,9 +52,12 @@ char *argv[];
     }
 
     /* Build the request based on input arguments */
-    if (argc == 1) {
+    if (argc == 2) {
+        //Limpia peticion
+        memset(peticion, 0, TAM_BUFFER);
         snprintf(peticion, TAM_BUFFER, "\r\n");
     } else {
+        memset(peticion, 0, TAM_BUFFER);
         snprintf(peticion, TAM_BUFFER, "%s\r\n", argv[2]);
     }
 
@@ -81,8 +84,10 @@ char *argv[];
 
         // Verificar la peticion es solo \r\n usuario vacío 
         if (strcmp(peticion, "\r\n") == 0) {
+            memset(usuario, 0, TAM_BUFFER);
             strcpy(usuario, "\r\n");
-        } else { // Si no, usuario = peticion 
+        } else { // Si no, usuario = peticion
+            memset(usuario, 0, TAM_BUFFER); 
             strcpy(usuario, peticion);
         }
     }
@@ -162,6 +167,7 @@ char *argv[];
                 hostname, ntohs(myaddr_in.sin_port), (char *) ctime(&timevar));
 
         /* Send the request to the server */
+        printf("Enviando mensaje: %s\n", usuario);
         if (send(s, usuario, strlen(usuario), 0) != strlen(usuario)) {
             fprintf(stderr, "%s: Connection aborted on error ", argv[0]);
             exit(1);
