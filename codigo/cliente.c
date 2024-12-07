@@ -87,6 +87,8 @@ char *argv[];
 		{
 			hostname[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
+
+        printf("Host: %s\n", hostname);
         
     } else {
         // Si no hay @, hostname = localhost
@@ -125,6 +127,7 @@ char *argv[];
         memset (&hints, 0, sizeof (hints));
         hints.ai_family = AF_INET;
 
+        printf("Resolviendo la IP de %s\n", hostname);
         /* esta funci�n es la recomendada para la compatibilidad con IPv6 gethostbyname queda obsoleta*/
         errcode = getaddrinfo(hostname, NULL, &hints, &res); 
         if (errcode != 0){
@@ -139,6 +142,8 @@ char *argv[];
             servaddr_in.sin_addr = ((struct sockaddr_in *) res->ai_addr)->sin_addr;
             }
         freeaddrinfo(res);
+
+        printf("Conectados a %s\n", hostname);
 
         /* puerto del servidor en orden de red*/
         servaddr_in.sin_port = htons(PUERTO);
