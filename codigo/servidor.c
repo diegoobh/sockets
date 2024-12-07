@@ -736,10 +736,11 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 
 		procesar_peticion_TCP(s, buf);
 
+		close(s);
+
 		reqcnt++;
 	}
-	close(s);
-
+	
 	/* Log a finishing message. */
 	time(&timevar);
 	/* The port number must be converted first to host byte
@@ -786,4 +787,6 @@ void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in)
 	hints.ai_family = AF_INET;
 
 	procesar_peticion_UDP(s, buffer, clientaddr_in, addrlen);
+
+	close(s);
 }

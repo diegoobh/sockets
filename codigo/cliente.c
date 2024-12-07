@@ -202,12 +202,14 @@ char *argv[];
         * after the server has sent all of its replies, and closed
         * its end of the connection.
         */
-        while (strcmp(respuesta_TCP, "\r\n") != 0) {
-            i = recv(s, respuesta_TCP, TAM_BUFFER, 0);
+        while (i = recv(s, respuesta_TCP, TAM_BUFFER, 0)) {
             if (i == -1) {
                 perror(argv[0]);
                 fprintf(stderr, "%s: error reading result\n", argv[0]);
                 exit(1);
+            }
+            if (strcmp(respuesta_TCP, "\r\n") == 0) {
+                break;
             }
             respuesta_TCP[i] = '\0';
             printf("Resuesta del servidor: \n%s", respuesta_TCP);
@@ -300,9 +302,10 @@ char *argv[];
                     alarm(0);
                     respuesta_UDP[cc] = '\0';
                     printf("Respuesta del servidor: %s\n", respuesta_UDP);
-                    break;
                 }
             }
+
+            break;
         }
 
         if (n_retry == 0) {
