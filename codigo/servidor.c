@@ -414,6 +414,9 @@ char *argv[];
 	int s_TCP, s_UDP; /* connected socket descriptor */
 	int ls_TCP;		  /* listen socket descriptor */
 
+	int s_UDP_NUEVO; /* connected socket descriptor */
+	int sUDPnuevo;	  /* listen socket descriptor */
+
 	int cc; /* contains the number of bytes read */
 
 	struct sigaction sa = {.sa_handler = SIG_IGN}; /* used to ignore SIGCHLD */
@@ -637,23 +640,23 @@ char *argv[];
 				* null terminated.
 				*/
 
-				s_UDP_NEW = socket(AF_INET, SOCK_DGRAM, 0);
-				if (s_UDP_NEW == -1)
+				s_UDP_NUEVO = socket(AF_INET, SOCK_DGRAM, 0);
+				if (s_UDP_NUEVO == -1)
 				{
 					printf("Error creando socket UDP\n");
 					exit(1);
 				}
 
-				nuevoSocketUDP = myaddr_in;
-				nuevoSocketUDP.sin_port = 0;
-				if (bind(s_UDP_NEW, (struct sockaddr *)&nuevoSocketUDP, sizeof(struct sockaddr_in)) == -1)
+				sUDPnuevo = myaddr_in;
+				sUDPnuevo.sin_port = 0;
+				if (bind(s_UDP_NEW, (struct sockaddr *)&sUDPnuevo, sizeof(struct sockaddr_in)) == -1)
 				{
 					printf("Error en bind\n");
 					exit(1);
 				}
 
 				addrlen = sizeof(struct sockaddr_in);
-				if (getsockname(s_UDP_NEW, (struct sockaddr *)&nuevoSocketUDP, &addrlen) == -1)
+				if (getsockname(s_UDP_NUEVO, (struct sockaddr *)&sUDPnuevo, &addrlen) == -1)
 				{
 					printf("Error en getsockname\n");
 					exit(1);
@@ -664,7 +667,7 @@ char *argv[];
 					case -1: /* Can't fork, just exit. */
 						exit(1);
 					case 0: /* Child process comes here. */
-						sprintf(buffer, "%d", ntohs(nuevoSocketUDP.sin_port));
+						sprintf(buffer, "%d", ntohs(sUDPnuevo.sin_port));
 						if (sendto(s_UDP, buffer, TAM_BUFFER, 0, (struct sockaddr *)&clientaddr_in, addrlen) == -1)
 						{
 						printf("Error en sendto\n");
@@ -672,7 +675,7 @@ char *argv[];
 						exit(1);
 						}
 						close(s_UDP); /* Close the listen socket inherited from the daemon. */
-						serverUDP(s_UDP_NEW, buffer, clientaddr_in);
+						serverUDP(s_UDP_NUEVO, buffer, clientaddr_in);
 						exit(0);
 					default: /* Daemon process comes here. */
 						/* The daemon needs to remember
@@ -685,7 +688,7 @@ char *argv[];
 						* allow the socket to be destroyed
 						* since it will be the last close.
 						*/
-						close(s_UDP_NEW);
+						close(s_UDP_NUEVO);
 				}
 			} /* UDP */
 		} /* Fin del bucle infinito de atenci�n a clientes */
