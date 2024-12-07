@@ -214,7 +214,6 @@ char * devuelveinf(char *user)
 		return;
 	}
 	memset(salida, 0, TAM_BUFFER);
-	fgets(salida, TAM_BUFFER, fp);
 	// Leer la salida del comando
 	if (fgets(salida, TAM_BUFFER, fp) == NULL)
 	{
@@ -224,9 +223,9 @@ char * devuelveinf(char *user)
 	}
 	pclose(fp);
 	// Extraer el valor de IDLE
-	separador = strtok(buffer, " ");
+	separador = strtok(salida, " ");
 	int i = 0;
-	while (token != NULL) {
+	while (separador != NULL) {
 		i++;
 		if (i == 5) { // La columna IDLE está en la quinta posición
 			memset(idleTime, 0, TAM_BUFFER);
