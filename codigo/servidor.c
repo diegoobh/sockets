@@ -284,7 +284,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 		}
 	} else { // Petición vacía
 		printf("Petición vacía.\n");
-        char * infoUsuario;
+        char linea[TAM_BUFFER];
 
 		// // Obtener información de todos los usuarios.
 		FILE *fp;
