@@ -317,12 +317,9 @@ void procesar_peticion_TCP(int s, char *usuario)
 
 	memset(infoUsuario, 0, TAM_BUFFER);
 	snprintf(infoUsuario, TAM_BUFFER, "\r\n");
-	nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
-	if (nc == -1)
+	if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 	{
-		perror("serverUDP");
-		printf("%s: sendto error\n", "serverUDP");
-		return;
+		fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 	}
 }
 
