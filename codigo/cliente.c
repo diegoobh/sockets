@@ -67,12 +67,18 @@ char *argv[];
     char *posicion = strchr(peticion, '@');
 
     if(posicion != NULL) {
-        // Calcular la longitud del usuario
-        int longitud_usuario = posicion - peticion;
 
-        // Copiar el nombre de usuario
-        strncpy(usuario, peticion, longitud_usuario);
-        usuario[longitud_usuario] = '\0'; // Añadir el terminador nulo
+        if(peticion[0] == '@') {
+            memset(usuario, 0, TAM_BUFFER);
+            strcpy(usuario, "\r\n");
+        } else {
+            // Calcular la longitud del usuario
+            int longitud_usuario = posicion - peticion;
+
+            // Copiar el nombre de usuario
+            strncpy(usuario, peticion, longitud_usuario);
+            usuario[longitud_usuario] = '\0'; // Añadir el terminador nulo
+        }
 
         // Obtener el host
         char *host = posicion + 1;
