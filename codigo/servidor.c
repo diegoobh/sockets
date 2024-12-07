@@ -423,7 +423,7 @@ char *argv[];
 	int ls_TCP;		  /* listen socket descriptor */
 
 	int s_UDP_NUEVO; /* connected socket descriptor */
-	int sUDPnuevo;	 /* listen socket descriptor */
+	struct sockaddr_in sUDPnuevo;
 
 	int cc; /* contains the number of bytes read */
 
@@ -632,11 +632,11 @@ char *argv[];
 					 * request arrives.  Then, it will
 					 * return the address of the client,
 					 * and a buffer containing its request.
-					 * BUFFERSIZE - 1 bytes are read so that
+					 * TAM_BUFFER - 1 bytes are read so that
 					 * room is left at the end of the buffer
 					 * for a null character.
 					 */
-					cc = recvfrom(s_UDP, buffer, BUFFERSIZE - 1, 0,
+					cc = recvfrom(s_UDP, buffer, TAM_BUFFER - 1, 0,
 								  (struct sockaddr *)&clientaddr_in, &addrlen);
 					if (cc == -1)
 					{
@@ -657,7 +657,7 @@ char *argv[];
 
 					sUDPnuevo = myaddr_in;
 					sUDPnuevo.sin_port = 0;
-					if (bind(s_UDP_NEW, (struct sockaddr *)&sUDPnuevo, sizeof(struct sockaddr_in)) == -1)
+					if (bind(s_UDP_NUEVO, (struct sockaddr *)&sUDPnuevo, sizeof(struct sockaddr_in)) == -1)
 					{
 						printf("Error en bind\n");
 						exit(1);
