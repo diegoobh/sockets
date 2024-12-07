@@ -39,7 +39,7 @@ void serverTCP(int s, struct sockaddr_in peeraddr_in);
 void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in);
 void errout(char *); /* declare error out routine */
 void procesar_peticion_TCP(int s, char *buf);
-void procesar_peticion_UDP(int s, char *buf);
+void procesar_peticion_UDP(int s, char *buf, struct sockaddr_in clientaddr_in, int addrlen);
 
 int FIN = 0; /* Para el cierre ordenado */
 void finalizar() { FIN = 1; }
@@ -317,7 +317,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 	}
 }
 
-void procesar_peticion_UDP(int s, char *usuario)
+void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_in, int addrlen)
 {
 	printf("Entro funcion usuario: %s\n", usuario);
 	char respuesta[TAM_BUFFER];
@@ -342,9 +342,12 @@ void procesar_peticion_UDP(int s, char *usuario)
 		printf("Respuesta: %s\n", respuesta);
 		printf("Enviando respuesta...\n");
 
-		if (send(s, respuesta, strlen(respuesta), 0) != strlen(respuesta))
+		nc = sendto(s, respuesta, strlen(respuesta), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+		if (nc == -1)
 		{
-			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+			perror("serverUDP");
+			printf("%s: sendto error\n", "serverUDP");
+			return;
 		}
 	} else { // Petición vacía
 		printf("Petición vacía.\n");
@@ -762,5 +765,5 @@ void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in)
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 
-	procesar_peticion_UDP(s, buffer);
+	procesar_peticion_UDP(s, buffer, clientaddr_in, addrlen);
 }
