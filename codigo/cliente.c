@@ -279,10 +279,10 @@ char *argv[];
         n_retry = RETRIES;
 
         // Mandar msj vacio al server
-        char msj_conexion[TAM_BUFFER];
-        memset(msj_conexion, 0, TAM_BUFFER);
-        snprintf(msj_conexion, TAM_BUFFER, "Nuevo Cliente UDP\r\n");
-        if (sendto(s, msj_conexion, strlen(msj_conexion), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
+        char msj_vacio[TAM_BUFFER];
+        memset(msj_vacio, 0, TAM_BUFFER);
+        snprintf(msj_vacio, TAM_BUFFER, "Nuevo Cliente UDP\r\n");
+        if (sendto(s, msj_vacio, strlen(msj_vacio), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
             perror(argv[0]);
             fprintf(stderr, "%s: unable to send request\n", argv[0]);
             exit(1);
@@ -293,8 +293,8 @@ char *argv[];
             fprintf(stderr, "%s: unable to get response\n", argv[0]);
             exit(1);
         }
-        buf[cc] = '\0';
-        servaddr_in.sin_port = htons(atoi(buf));
+        int nuevoPuerto = atoi(buf);
+        servaddr_in.sin_port = htons(nuevoPuerto);
         // Enviar mensaje al server ya con el puerto actualizado
 
         while (n_retry > 0) {
