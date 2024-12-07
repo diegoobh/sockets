@@ -202,7 +202,8 @@ char *argv[];
         * after the server has sent all of its replies, and closed
         * its end of the connection.
         */
-        while (i = recv(s, respuesta_TCP, TAM_BUFFER, 0)) {
+        while (strcmp(respuesta_TCP, "\r\n") != 0) {
+            i = recv(s, respuesta_TCP, TAM_BUFFER, 0);
             if (i == -1) {
                 perror(argv[0]);
                 fprintf(stderr, "%s: error reading result\n", argv[0]);
@@ -285,7 +286,7 @@ char *argv[];
 
             alarm(TIMEOUT);
 
-            while (1) {
+            while (strcmp(respuesta_UDP, "\r\n") != 0) {
                 if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                     if (errno == EINTR) {
                         printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);

@@ -314,6 +314,16 @@ void procesar_peticion_TCP(int s, char *usuario)
 			}
 		}
 	}
+
+	memset(infoUsuario, 0, TAM_BUFFER);
+	snprintf(infoUsuario, TAM_BUFFER, "\r\n");
+	nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+	if (nc == -1)
+	{
+		perror("serverUDP");
+		printf("%s: sendto error\n", "serverUDP");
+		return;
+	}
 }
 
 void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_in, int addrlen)
@@ -347,6 +357,8 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			printf("%s: sendto error\n", "serverUDP");
 			return;
 		}
+
+
 	} else { // Petición vacía
 		printf("Petición vacía.\n");
         char linea[TAM_BUFFER];
@@ -379,11 +391,21 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 					printf("%s: sendto error\n", "serverUDP");
 					return;
 				}
-				free(infoUsuario);
-				infoUsuario = NULL;
-				memset(linea, 0, TAM_BUFFER);
+				// free(infoUsuario);
+				// infoUsuario = NULL;
+				// memset(linea, 0, TAM_BUFFER);
 			}
 		}
+	}
+
+	memset(infoUsuario, 0, TAM_BUFFER);
+	snprintf(infoUsuario, TAM_BUFFER, "\r\n");
+	nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+	if (nc == -1)
+	{
+		perror("serverUDP");
+		printf("%s: sendto error\n", "serverUDP");
+		return;
 	}
 }
 
