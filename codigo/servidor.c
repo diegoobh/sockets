@@ -258,7 +258,7 @@ char * devuelveinf(char *user)
 void procesar_peticion_TCP(int s, char *usuario)
 {
 	printf("Entro funcion usuario: %s\n", usuario);
-	char respuesta[TAM_BUFFER];
+	char * infoUsuario;
 
 	if (strcmp(usuario, "\r\n") != 0){ // Petición no vacía
 		printf("Usuario no vacio\n");
@@ -274,18 +274,17 @@ void procesar_peticion_TCP(int s, char *usuario)
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
 
-		char *respuesta = devuelveinf(usuario);
+		infoUsuario = devuelveinf(usuario);
 		
-		printf("Respuesta: %s\n", respuesta);
 		printf("Enviando respuesta...\n");
 
-		if (send(s, respuesta, strlen(respuesta), 0) != strlen(respuesta))
+		if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 		{
 			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 		}
 	} else { // Petición vacía
 		printf("Petición vacía.\n");
-        char linea[TAM_BUFFER];
+        char * infoUsuario;
 
 		// // Obtener información de todos los usuarios.
 		FILE *fp;
@@ -306,9 +305,9 @@ void procesar_peticion_TCP(int s, char *usuario)
 			if (user != NULL)
 			{
 				// Obtener datos del usuario
-				char *respuesta = devuelveinf(user);
+				infoUsuario = devuelveinf(user);
 
-				if (send(s, respuesta, strlen(respuesta), 0) != strlen(respuesta))
+				if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 				{
 					fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 				}
@@ -320,7 +319,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_in, int addrlen)
 {
 	printf("Entro funcion usuario: %s\n", usuario);
-	char respuesta[TAM_BUFFER];
+	char * infoUsuario;
 	int nc;
 
 	if (strcmp(usuario, "\r\n") != 0){ // Petición no vacía
@@ -337,12 +336,11 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
 
-		char *respuesta = devuelveinf(usuario);
+		infoUsuario = devuelveinf(usuario);
 		
-		printf("Respuesta: %s\n", respuesta);
 		printf("Enviando respuesta...\n");
 
-		nc = sendto(s, respuesta, strlen(respuesta), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+		nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 		if (nc == -1)
 		{
 			perror("serverUDP");
@@ -372,9 +370,9 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			if (user != NULL)
 			{
 				// Obtener datos del usuario
-				char *respuesta = devuelveinf(user);
+				infoUsuario = devuelveinf(user);
 
-				nc = sendto(s, respuesta, strlen(respuesta), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+				nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 				if (nc == -1)
 				{
 					perror("serverUDP");
