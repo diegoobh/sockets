@@ -285,20 +285,22 @@ char *argv[];
 
             alarm(TIMEOUT);
 
-            if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
-                if (errno == EINTR) {
-                    printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
-                    n_retry--;
+            while (1) {
+                if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
+                    if (errno == EINTR) {
+                        printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
+                        n_retry--;
+                    } else {
+                        perror(argv[0]);
+                        fprintf(stderr, "%s: unable to get response\n", argv[0]);
+                        exit(1);
+                    }
                 } else {
-                    perror(argv[0]);
-                    fprintf(stderr, "%s: unable to get response\n", argv[0]);
-                    exit(1);
+                    alarm(0);
+                    respuesta_UDP[cc] = '\0';
+                    printf("Respuesta del servidor: %s\n", respuesta_UDP);
+                    break;
                 }
-            } else {
-                alarm(0);
-                respuesta_UDP[cc] = '\0';
-                printf("Respuesta del servidor: %s\n", respuesta_UDP);
-                break;
             }
         }
 

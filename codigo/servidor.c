@@ -319,7 +319,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_in, int addrlen)
 {
 	printf("Entro funcion usuario: %s\n", usuario);
-	char * infoUsuario;
+	char * infoUsuario = NULL;
 	int nc;
 
 	if (strcmp(usuario, "\r\n") != 0){ // Petición no vacía
@@ -379,6 +379,9 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 					printf("%s: sendto error\n", "serverUDP");
 					return;
 				}
+				free(infoUsuario);
+				infoUsuario = NULL;
+				memset(linea, 0, TAM_BUFFER);
 			}
 		}
 	}
