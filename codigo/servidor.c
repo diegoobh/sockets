@@ -68,7 +68,7 @@ char * devuelveinf(char *user)
 	if ((fp = popen(comando, "r")) == NULL)
 	{
 		printf("Error al ejecutar el comando getent.\n");
-		return 0;
+		return NULL;
 	}
 	// Leer la salida del comando
 	if (fgets(linea, TAM_BUFFER, fp) != NULL)
@@ -109,7 +109,7 @@ char * devuelveinf(char *user)
 	else
 	{
 		printf("Error al obtener el login del usuario.\n");
-		return 0;
+		return NULL;
 	}
 	// Saltar los campos que no nos interesan
 	for (int i = 0; i < 4; i++)
@@ -124,7 +124,7 @@ char * devuelveinf(char *user)
 	else
 	{
 		printf("Error al obtener el nombre del usuario.\n");
-		return;
+		return NULL;
 	}
 	// Sexto campo: directorio;
 	if ((separador = strtok(NULL, ":")) != NULL)
@@ -135,7 +135,7 @@ char * devuelveinf(char *user)
 	else
 	{
 		printf("Error al obtener el directorio del usuario.\n");
-		return;
+		return NULL;
 	}
 	// Séptimo campo: shell;
 	if ((separador = strtok(NULL, ":")) != NULL)
@@ -146,7 +146,7 @@ char * devuelveinf(char *user)
 	else
 	{
 		printf("Error al obtener el shell del usuario.\n");
-		return;
+		return NULL;
 	}
 	// Obtener la información de la conexión del usuario
 	memset(comando, 0, TAM_BUFFER);
@@ -154,7 +154,7 @@ char * devuelveinf(char *user)
 	if ((fp = popen(comando, "r")) == NULL)
 	{
 		printf("Error al ejecutar el comando lastlog.\n");
-		return;
+		return NULL;
 	}
 	// Ignorar la primera línea (encabezado)
 	memset(salida, 0, TAM_BUFFER);
@@ -164,7 +164,7 @@ char * devuelveinf(char *user)
 	{
 		printf("Error al leer la salida de lastlog.\n");
 		pclose(fp);
-		return;
+		return NULL;
 	}
 	pclose(fp);
 	// Parsear la línea obtenida
@@ -178,7 +178,7 @@ char * devuelveinf(char *user)
 	else
 	{
 		printf("Error al obtener el TTY del usuario.\n");
-		return;
+		return NULL;
 	}
 	// Tercer campo (IP)
 	if ((separador = strtok(NULL, " \t")) != NULL)
@@ -189,7 +189,7 @@ char * devuelveinf(char *user)
 	else
 	{
 		printf("Error al obtener la IP del usuario.\n");
-		return;
+		return NULL;
 	}
 	// Cuarto campo (Time)
 	if ((separador = strtok(NULL, "\n")) != NULL)
@@ -200,7 +200,7 @@ char * devuelveinf(char *user)
 	else
 	{
 		printf("Error al obtener la fecha del usuario.\n");
-		return;
+		return NULL;
 	}
 	// Formatear la fecha para que solo incluya hasta los minutos (HH:MM)
 	int longitudFecha = strcspn(date, ":") + 3;
@@ -211,7 +211,7 @@ char * devuelveinf(char *user)
 	snprintf(comando, TAM_BUFFER, "w | grep %s", user); 
 	if((fp = popen(comando, "r")) == NULL){
 		printf("Error al ejecutar el comando w\n"); 
-		return;
+		return NULL;
 	}
 	memset(salida, 0, TAM_BUFFER);
 	// Leer la salida del comando
@@ -219,7 +219,7 @@ char * devuelveinf(char *user)
 	{
 		printf("Error al leer la salida de w.\n");
 		pclose(fp);
-		return;
+		return NULL;
 	}
 	pclose(fp);
 	// Extraer el valor de IDLE
