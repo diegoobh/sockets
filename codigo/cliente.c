@@ -39,7 +39,7 @@ char *argv[];
     struct sockaddr_in myaddr_in;	/* for local socket address */
     struct sockaddr_in servaddr_in;	/* for server socket address */
     struct sigaction vec;
-    char hostname[TAM_BUFFER];
+    const char hostname[TAM_BUFFER];
 	char buf[TAM_BUFFER];
     char peticion[TAM_BUFFER];
     char usuario[TAM_BUFFER];
@@ -77,6 +77,16 @@ char *argv[];
         // Obtener el host
         char *host = posicion + 1;
         strcpy(hostname, host);
+        // Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
+		size_t len = strlen(hostname);
+		if (len > 0 && (hostname[len - 1] == '\n' || hostname[len - 1] == '\r'))
+		{
+			hostname[len - 1] = '\0'; // Eliminar el salto de línea '\n'
+		}
+		if (len > 1 && hostname[len - 2] == '\r')
+		{
+			hostname[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
+		}
         
     } else {
         // Si no hay @, hostname = localhost
@@ -116,7 +126,7 @@ char *argv[];
         hints.ai_family = AF_INET;
 
         /* esta funci�n es la recomendada para la compatibilidad con IPv6 gethostbyname queda obsoleta*/
-        errcode = getaddrinfo (hostname, NULL, &hints, &res); 
+        errcode = getaddrinfo(hostname, NULL, &hints, &res); 
         if (errcode != 0){
                 /* Name was not found.  Return a
                 * special value signifying the error. */
