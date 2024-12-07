@@ -76,6 +76,7 @@ char *argv[];
 
         // Obtener el host
         char *host = posicion + 1;
+        memset(hostname, 0, TAM_BUFFER);
         strcpy(hostname, host);
         // Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
 		size_t len = strlen(hostname);
@@ -92,6 +93,7 @@ char *argv[];
         
     } else {
         // Si no hay @, hostname = localhost
+        memset(hostname, 0, TAM_BUFFER);
         strcpy(hostname, "localhost");
 
         // Verificar la peticion es solo \r\n usuario vacío 
@@ -143,8 +145,6 @@ char *argv[];
             }
         freeaddrinfo(res);
 
-        printf("Conectados a %s\n", hostname);
-
         /* puerto del servidor en orden de red*/
         servaddr_in.sin_port = htons(PUERTO);
 
@@ -156,6 +156,7 @@ char *argv[];
             fprintf(stderr, "%s: unable to connect to remote\n", argv[0]);
             exit(1);
         }
+        printf("Conectados a %s\n", hostname);
             /* Since the connect call assigns a free address
             * to the local end of this connection, let's use
             * getsockname to see what it assigned.  Note that
