@@ -43,7 +43,7 @@ void procesar_peticion_UDP(int s, char *buf, struct sockaddr_in clientaddr_in, i
 
 int FIN = 0; /* Para el cierre ordenado */
 void finalizar() { FIN = 1; }
-char * devuelveinf(char *user)
+char *devuelveinf(char *user)
 {
 	char login[TAM_BUFFER];
 	char name[TAM_BUFFER];
@@ -61,7 +61,7 @@ char * devuelveinf(char *user)
 	char comando[TAM_BUFFER];
 	char salida[TAM_BUFFER];
 	char linea[TAM_BUFFER];
-	char * respuesta = (char *)malloc(TAM_BUFFER);
+	char *respuesta = (char *)malloc(TAM_BUFFER);
 
 	FILE *fp;
 	memset(comando, 0, TAM_BUFFER);
@@ -91,12 +91,13 @@ char * devuelveinf(char *user)
 			memset(salida, 0, TAM_BUFFER);
 			strncpy(salida, linea, TAM_BUFFER);
 		}
-		
-	} else {
+	}
+	else
+	{
 		printf("Usuario no encontrado.\n");
 		pclose(fp);
-		memset(respuesta, 0, TAM_BUFFER); 
-		snprintf(respuesta, TAM_BUFFER, "%s: no such user\n", user); 
+		memset(respuesta, 0, TAM_BUFFER);
+		snprintf(respuesta, TAM_BUFFER, "%s: no such user\n", user);
 		return respuesta;
 	}
 
@@ -117,7 +118,7 @@ char * devuelveinf(char *user)
 	// Saltar los campos que no nos interesan
 	for (int i = 0; i < 4; i++)
 		separador = strtok(NULL, ":");
-		
+
 	// Quinto campo: nombre
 	if (separador != NULL)
 	{
@@ -211,9 +212,10 @@ char * devuelveinf(char *user)
 	time[longitudFecha] = '\0'; // Asegurar que termina en null
 
 	memset(comando, 0, TAM_BUFFER);
-	snprintf(comando, TAM_BUFFER, "w | grep %s", user); 
-	if((fp = popen(comando, "r")) == NULL){
-		printf("Error al ejecutar el comando w\n"); 
+	snprintf(comando, TAM_BUFFER, "w | grep %s", user);
+	if ((fp = popen(comando, "r")) == NULL)
+	{
+		printf("Error al ejecutar el comando w\n");
 		return NULL;
 	}
 	memset(salida, 0, TAM_BUFFER);
@@ -228,9 +230,11 @@ char * devuelveinf(char *user)
 	// Extraer el valor de IDLE
 	separador = strtok(salida, " ");
 	int i = 0;
-	while (separador != NULL) {
+	while (separador != NULL)
+	{
 		i++;
-		if (i == 5) { // La columna IDLE está en la quinta posición
+		if (i == 5)
+		{ // La columna IDLE está en la quinta posición
 			memset(idleTime, 0, TAM_BUFFER);
 			strncpy(idleTime, separador, TAM_BUFFER - 1);
 			idleTime[TAM_BUFFER - 1] = '\0'; // Asegurar que termina en null
@@ -258,9 +262,10 @@ char * devuelveinf(char *user)
 void procesar_peticion_TCP(int s, char *usuario)
 {
 	printf("Entro funcion usuario: %s\n", usuario);
-	char * infoUsuario;
+	char *infoUsuario;
 
-	if (strcmp(usuario, "\r\n") != 0){ // Petición no vacía
+	if (strcmp(usuario, "\r\n") != 0)
+	{ // Petición no vacía
 		printf("Usuario no vacio\n");
 
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
@@ -275,16 +280,18 @@ void procesar_peticion_TCP(int s, char *usuario)
 		}
 
 		infoUsuario = devuelveinf(usuario);
-		
+
 		printf("Enviando respuesta...\n");
 
 		if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 		{
 			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 		}
-	} else { // Petición vacía
+	}
+	else
+	{ // Petición vacía
 		printf("Petición vacía.\n");
-        char linea[TAM_BUFFER];
+		char linea[TAM_BUFFER];
 
 		// // Obtener información de todos los usuarios.
 		FILE *fp;
@@ -293,7 +300,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 			printf("Error al ejecutar el comando who.\n");
 			return;
 		}
-		
+
 		// Leer la salida del comando y coger el primer campo (login)
 		memset(linea, 0, TAM_BUFFER);
 		while (fgets(linea, TAM_BUFFER, fp) != NULL)
@@ -326,10 +333,11 @@ void procesar_peticion_TCP(int s, char *usuario)
 void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_in, int addrlen)
 {
 	printf("Entro funcion usuario: %s\n", usuario);
-	char * infoUsuario = NULL;
+	char *infoUsuario = NULL;
 	int nc;
 
-	if (strcmp(usuario, "\r\n") != 0){ // Petición no vacía
+	if (strcmp(usuario, "\r\n") != 0)
+	{ // Petición no vacía
 		printf("Usuario no vacio\n");
 
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
@@ -344,7 +352,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 		}
 
 		infoUsuario = devuelveinf(usuario);
-		
+
 		printf("Enviando respuesta...\n");
 
 		nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
@@ -354,11 +362,11 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			printf("%s: sendto error\n", "serverUDP");
 			return;
 		}
-
-
-	} else { // Petición vacía
+	}
+	else
+	{ // Petición vacía
 		printf("Petición vacía.\n");
-        char linea[TAM_BUFFER];
+		char linea[TAM_BUFFER];
 
 		// // Obtener información de todos los usuarios.
 		FILE *fp;
@@ -367,7 +375,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			printf("Error al ejecutar el comando who.\n");
 			return;
 		}
-		
+
 		// Leer la salida del comando y coger el primer campo (login)
 		memset(linea, 0, TAM_BUFFER);
 		while (fgets(linea, TAM_BUFFER, fp) != NULL)
@@ -415,7 +423,7 @@ char *argv[];
 	int ls_TCP;		  /* listen socket descriptor */
 
 	int s_UDP_NUEVO; /* connected socket descriptor */
-	int sUDPnuevo;	  /* listen socket descriptor */
+	int sUDPnuevo;	 /* listen socket descriptor */
 
 	int cc; /* contains the number of bytes read */
 
@@ -618,89 +626,90 @@ char *argv[];
 					}
 				} /* De TCP*/
 				/* Comprobamos si el socket seleccionado es el socket UDP */
-			if (FD_ISSET(s_UDP, &readmask))
+				if (FD_ISSET(s_UDP, &readmask))
 				{
-				/* This call will block until a new
-				* request arrives.  Then, it will
-				* return the address of the client,
-				* and a buffer containing its request.
-				* BUFFERSIZE - 1 bytes are read so that
-				* room is left at the end of the buffer
-				* for a null character.
-				*/
-				cc = recvfrom(s_UDP, buffer, BUFFERSIZE - 1, 0,
-				(struct sockaddr *)&clientaddr_in, &addrlen);
-				if (cc == -1)
-				{
-					perror(argv[0]);
-					printf("%s: recvfrom error\n", argv[0]);
-					exit(1);
-				}
-				/* Make sure the message received is
-				* null terminated.
-				*/
+					/* This call will block until a new
+					 * request arrives.  Then, it will
+					 * return the address of the client,
+					 * and a buffer containing its request.
+					 * BUFFERSIZE - 1 bytes are read so that
+					 * room is left at the end of the buffer
+					 * for a null character.
+					 */
+					cc = recvfrom(s_UDP, buffer, BUFFERSIZE - 1, 0,
+								  (struct sockaddr *)&clientaddr_in, &addrlen);
+					if (cc == -1)
+					{
+						perror(argv[0]);
+						printf("%s: recvfrom error\n", argv[0]);
+						exit(1);
+					}
+					/* Make sure the message received is
+					 * null terminated.
+					 */
 
-				s_UDP_NUEVO = socket(AF_INET, SOCK_DGRAM, 0);
-				if (s_UDP_NUEVO == -1)
-				{
-					printf("Error creando socket UDP\n");
-					exit(1);
-				}
+					s_UDP_NUEVO = socket(AF_INET, SOCK_DGRAM, 0);
+					if (s_UDP_NUEVO == -1)
+					{
+						printf("Error creando socket UDP\n");
+						exit(1);
+					}
 
-				sUDPnuevo = myaddr_in;
-				sUDPnuevo.sin_port = 0;
-				if (bind(s_UDP_NEW, (struct sockaddr *)&sUDPnuevo, sizeof(struct sockaddr_in)) == -1)
-				{
-					printf("Error en bind\n");
-					exit(1);
-				}
+					sUDPnuevo = myaddr_in;
+					sUDPnuevo.sin_port = 0;
+					if (bind(s_UDP_NEW, (struct sockaddr *)&sUDPnuevo, sizeof(struct sockaddr_in)) == -1)
+					{
+						printf("Error en bind\n");
+						exit(1);
+					}
 
-				addrlen = sizeof(struct sockaddr_in);
-				if (getsockname(s_UDP_NUEVO, (struct sockaddr *)&sUDPnuevo, &addrlen) == -1)
-				{
-					printf("Error en getsockname\n");
-					exit(1);
-				}
+					addrlen = sizeof(struct sockaddr_in);
+					if (getsockname(s_UDP_NUEVO, (struct sockaddr *)&sUDPnuevo, &addrlen) == -1)
+					{
+						printf("Error en getsockname\n");
+						exit(1);
+					}
 
-				switch (fork())
-				{
+					switch (fork())
+					{
 					case -1: /* Can't fork, just exit. */
 						exit(1);
 					case 0: /* Child process comes here. */
 						sprintf(buffer, "%d", ntohs(sUDPnuevo.sin_port));
 						if (sendto(s_UDP, buffer, TAM_BUFFER, 0, (struct sockaddr *)&clientaddr_in, addrlen) == -1)
 						{
-						printf("Error en sendto\n");
-						perror("sendto");
-						exit(1);
+							printf("Error en sendto\n");
+							perror("sendto");
+							exit(1);
 						}
 						close(s_UDP); /* Close the listen socket inherited from the daemon. */
 						serverUDP(s_UDP_NUEVO, buffer, clientaddr_in);
 						exit(0);
 					default: /* Daemon process comes here. */
 						/* The daemon needs to remember
-						* to close the new accept socket
-						* after forking the child.  This
-						* prevents the daemon from running
-						* out of file descriptor space.  It
-						* also means that when the server
-						* closes the socket, that it will
-						* allow the socket to be destroyed
-						* since it will be the last close.
-						*/
+						 * to close the new accept socket
+						 * after forking the child.  This
+						 * prevents the daemon from running
+						 * out of file descriptor space.  It
+						 * also means that when the server
+						 * closes the socket, that it will
+						 * allow the socket to be destroyed
+						 * since it will be the last close.
+						 */
 						close(s_UDP_NUEVO);
-				}
-			} /* UDP */
-		} /* Fin del bucle infinito de atenci�n a clientes */
-		
-		/* Cerramos los sockets UDP y TCP */
-		close(ls_TCP);
-		close(s_UDP);
+					}
+				} /* UDP */
+			} /* Fin del bucle infinito de atenci�n a clientes */
 
-		printf("\nFin de programa servidor!\n");
+			/* Cerramos los sockets UDP y TCP */
+			close(ls_TCP);
+			close(s_UDP);
 
-	default: /* Parent process comes here. */
-		exit(0);
+			printf("\nFin de programa servidor!\n");
+
+		default: /* Parent process comes here. */
+			exit(0);
+		}
 	}
 }
 
@@ -792,7 +801,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 
 		reqcnt++;
 	}
-	
+
 	/* Log a finishing message. */
 	time(&timevar);
 	/* The port number must be converted first to host byte
