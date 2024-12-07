@@ -55,6 +55,7 @@ char * devuelveinf(char *user)
 	char mail[TAM_BUFFER] = "No mail.";
 	char plan[TAM_BUFFER] = "No plan.";
 	char infoConexion[TAM_BUFFER];
+	char idleTime[TAM_BUFFER];
 	// Obtener información del usuario.
 	char comando[TAM_BUFFER];
 	char salida[TAM_BUFFER];
@@ -206,36 +207,58 @@ char * devuelveinf(char *user)
 	strncpy(time, date, longitudFecha);
 	time[longitudFecha] = '\0'; // Asegurar que termina en null
 
+	memset(comando, 0, TAM_BUFFER);
+	snprintf(comando, TAM_BUFFER, "w | grep %s", user); 
+	if((fp = popen(comando, "r")) == NULL){
+		printf("Error al ejecutar el comando w\n"); 
+		return;
+	}
+	memset(salida, 0, TAM_BUFFER);
+	fgets(salida, TAM_BUFFER, fp);
+	// Leer la salida del comando
+	if (fgets(salida, TAM_BUFFER, fp) == NULL)
+	{
+		printf("Error al leer la salida de w.\n");
+		pclose(fp);
+		return;
+	}
+	pclose(fp);
+	// Extraer el valor de IDLE
+	separador = strtok(buffer, " ");
+	int i = 0;
+	while (token != NULL) {
+		i++;
+		if (i == 5) { // La columna IDLE está en la quinta posición
+			memset(idleTime, 0, TAM_BUFFER);
+			strncpy(idleTime, separador, TAM_BUFFER - 1);
+			idleTime[TAM_BUFFER - 1] = '\0'; // Asegurar que termina en null
+			break;
+		}
+		separador = strtok(NULL, " ");
+	}
+
 	// Construir la respuesta.
 	memset(infoConexion, 0, TAM_BUFFER);
 	snprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
-	printf("Información de la conexión: %s\n", infoConexion);
 	memset(respuesta, 0, TAM_BUFFER);
-	printf("Login: %s\t\t\t\t\tName: %s\n \
-							  Directory: %s\t\t\t\tShell: %s\n \
-							  %s\n \
-							  %s\n \
-							  %s\r\n",
-			 login, name, directory, shell,
-			 infoConexion, mail, plan);
 	snprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n \
 							  Directory: %s\t\t\t\tShell: %s\n \
+							  Office: -\t\t\t\tHome Phone: -\n \
+							  %s\n \
 							  %s\n \
 							  %s\n \
 							  %s\r\n",
 			 login, name, directory, shell,
-			 infoConexion, mail, plan);
+			 infoConexion, idleTime, mail, plan);
 	return respuesta;
 }
 
 void procesar_peticion(int s, char *usuario)
 {
-
 	printf("Entro funcion usuario: %s\n", usuario);
 	char respuesta[TAM_BUFFER];
 
-	if (strcmp(usuario, "\r\n") != 0)
-	{ // Petición no vacía
+	if (strcmp(usuario, "\r\n") != 0){ // Petición no vacía
 		printf("Usuario no vacio\n");
 
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
@@ -258,9 +281,7 @@ void procesar_peticion(int s, char *usuario)
 		{
 			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 		}
-	}
-	else
-	{ // Petición vacía
+	} else { // Petición vacía
 		printf("Petición vacía.\n");
         char linea[TAM_BUFFER];
 
