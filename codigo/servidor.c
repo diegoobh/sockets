@@ -603,7 +603,7 @@ char *argv[];
 					 * room is left at the end of the buffer
 					 * for a null character.
 					 */
-					cc = recvfrom(s_UDP, buffer, TAM_BUFFER, 0, // TAM_BUFFER - 1
+					cc = recvfrom(s_UDP, buffer, TAM_BUFFER - 1, 0, 
 								  (struct sockaddr *)&clientaddr_in, &addrlen);
 					if (cc == -1)
 					{
@@ -614,7 +614,7 @@ char *argv[];
 					/* Make sure the message received is
 					 * null terminated.
 					 */
-					//buffer[cc] = '\0';
+					buffer[cc] = '\0';
 					serverUDP(s_UDP, buffer, clientaddr_in);
 				}
 			}
