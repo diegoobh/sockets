@@ -93,6 +93,7 @@ char * devuelveinf(char *user)
 		
 	} else {
 		printf("Usuario no encontrado.\n");
+		pclose(fp);
 		memset(respuesta, 0, TAM_BUFFER); 
 		snprintf(respuesta, TAM_BUFFER, "%s: no such user\n", user); 
 		return respuesta;
