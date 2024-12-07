@@ -90,13 +90,12 @@ char * devuelveinf(char *user)
 			memset(salida, 0, TAM_BUFFER);
 			strncpy(salida, linea, TAM_BUFFER);
 		}
-		else
-		{
-			printf("Usuario no encontrado.\n");
-			memset(respuesta, 0, TAM_BUFFER); 
-			snprintf(respuesta, TAM_BUFFER, "%s: no such user\n", user); 
-			return respuesta;
-		}
+		
+	} else {
+		printf("Usuario no encontrado.\n");
+		memset(respuesta, 0, TAM_BUFFER); 
+		snprintf(respuesta, TAM_BUFFER, "%s: no such user\n", user); 
+		return respuesta;
 	}
 
 	pclose(fp);
