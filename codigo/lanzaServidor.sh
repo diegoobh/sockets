@@ -1,11 +1,11 @@
 # lanzaServidor.sh
 # Lanza el servidor que es un daemon y varios clientes
-./servidor
-./cliente TCP &
-./cliente TCP david &
-./cliente TCP @nogal.usal.es &
-./cliente TCP zxcvb@nogal.usal.es &
-./cliente TCP p1777001@nogal.usal.es &
+# ./servidor
+#./cliente TCP &
+#./cliente TCP david &
+#./cliente TCP @nogal.usal.es &
+#./cliente TCP zxcvb@nogal.usal.es &
+#./cliente TCP p1777001@nogal.usal.es &
 ./cliente UDP &
 ./cliente UDP i9367527 &
 ./cliente UDP @nogal.usal.es &

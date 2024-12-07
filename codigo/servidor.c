@@ -696,15 +696,15 @@ char *argv[];
 					}
 				} /* UDP */
 			}
-		}	  /* Fin del bucle infinito de atenci�n a clientes */
-			/* Cerramos los sockets UDP y TCP */
-			close(ls_TCP);
-			close(s_UDP);
+		} /* Fin del bucle infinito de atenci�n a clientes */
+		/* Cerramos los sockets UDP y TCP */
+		close(ls_TCP);
+		close(s_UDP);
 
-			printf("\nFin de programa servidor!\n");
+		printf("\nFin de programa servidor!\n");
 
-		default: /* Parent process comes here. */
-			exit(0);
+	default: /* Parent process comes here. */
+		exit(0);
 	}
 }
 

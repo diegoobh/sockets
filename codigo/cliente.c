@@ -21,7 +21,7 @@ extern int errno;
 #define ADDRNOTFOUND	0xffffffff
 #define RETRIES	5
 #define PUERTO 7527
-#define TIMEOUT 6
+#define TIMEOUT 30
 #define MAXHOST 512
 
 void handler() {
@@ -299,6 +299,7 @@ char *argv[];
 
         while (n_retry > 0) {
       
+            printf("Enviando mensaje: %s\n", usuario);
             if (sendto(s, usuario, strlen(usuario), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
                 perror(argv[0]);
                 fprintf(stderr, "%s: unable to send request\n", argv[0]);
@@ -308,6 +309,7 @@ char *argv[];
             alarm(TIMEOUT);
 
             while (1) {
+                printf("Recerviendo respuesta...\n");
                 if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                     if (errno == EINTR) {
                         printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
@@ -318,13 +320,16 @@ char *argv[];
                         exit(1);
                     }
                 } else {
+                    printf("He recibido respuesta\n");
                     alarm(0);
-                    if(strcmp(respuesta_UDP, "\r\n") != 0){
-                        break;
-                    }
                     respuesta_UDP[cc] = '\0';
                     printf("Respuesta del servidor: %s\n", respuesta_UDP);
+                    if(strcmp(respuesta_UDP, "\r\n") == 0){
+                        printf("Salidendo...\n");
+                        break;
+                    }
                 }
+
             }
 
             break;

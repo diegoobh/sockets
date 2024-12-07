@@ -5,18 +5,13 @@ CFLAGS =
 #Descomentar la siguiente linea para linux
 LIBS =
 
-PROGS = servidor clientcp clientudp cliente
+PROGS = servidor cliente
 
 all: ${PROGS}
 
 servidor: servidor.o
 	${CC} ${CFLAGS} -o $@ servidor.o ${LIBS}
 	
-clientcp: clientcp.o
-	${CC} ${CFLAGS} -o $@ clientcp.o ${LIBS}
-
-clientudp: clientudp.o
-	${CC} ${CFLAGS} -o $@ clientudp.o ${LIBS}
 
 cliente: cliente.o
 	${CC} ${CFLAGS} -o $@ cliente.o ${LIBS}
