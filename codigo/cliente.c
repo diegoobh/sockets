@@ -39,7 +39,7 @@ char *argv[];
     struct sockaddr_in myaddr_in;	/* for local socket address */
     struct sockaddr_in servaddr_in;	/* for server socket address */
     struct sigaction vec;
-    const char hostname[TAM_BUFFER];
+    char hostname[TAM_BUFFER];
 	char buf[TAM_BUFFER];
     char peticion[TAM_BUFFER];
     char usuario[TAM_BUFFER];
