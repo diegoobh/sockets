@@ -692,6 +692,7 @@ char *argv[];
 				}
 			} /* UDP */
 		} /* Fin del bucle infinito de atenci�n a clientes */
+		
 		/* Cerramos los sockets UDP y TCP */
 		close(ls_TCP);
 		close(s_UDP);
