@@ -636,17 +636,13 @@ char *argv[];
 					 * room is left at the end of the buffer
 					 * for a null character.
 					 */
-					cc = recvfrom(s_UDP, buffer, TAM_BUFFER - 1, 0,
-								  (struct sockaddr *)&clientaddr_in, &addrlen);
+					cc = recvfrom(s_UDP, buffer, TAM_BUFFER - 1, 0, (struct sockaddr *)&clientaddr_in, &addrlen);
 					if (cc == -1)
 					{
 						perror(argv[0]);
 						printf("%s: recvfrom error\n", argv[0]);
 						exit(1);
 					}
-					/* Make sure the message received is
-					 * null terminated.
-					 */
 
 					s_UDP_NUEVO = socket(AF_INET, SOCK_DGRAM, 0);
 					if (s_UDP_NUEVO == -1)
@@ -699,8 +695,8 @@ char *argv[];
 						close(s_UDP_NUEVO);
 					}
 				} /* UDP */
-			} /* Fin del bucle infinito de atenci�n a clientes */
-
+			}
+		}	  /* Fin del bucle infinito de atenci�n a clientes */
 			/* Cerramos los sockets UDP y TCP */
 			close(ls_TCP);
 			close(s_UDP);
@@ -709,7 +705,6 @@ char *argv[];
 
 		default: /* Parent process comes here. */
 			exit(0);
-		}
 	}
 }
 
