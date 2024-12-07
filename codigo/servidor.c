@@ -615,31 +615,79 @@ char *argv[];
 					}
 				} /* De TCP*/
 				/* Comprobamos si el socket seleccionado es el socket UDP */
-				if (FD_ISSET(s_UDP, &readmask))
+			if (FD_ISSET(s_UDP, &readmask))
 				{
-					/* This call will block until a new
-					 * request arrives.  Then, it will
-					 * return the address of the client,
-					 * and a buffer containing its request.
-					 * TAM_BUFFER - 1 bytes are read so that
-					 * room is left at the end of the buffer
-					 * for a null character.
-					 */
-					cc = recvfrom(s_UDP, buffer, TAM_BUFFER - 1, 0, 
-								  (struct sockaddr *)&clientaddr_in, &addrlen);
-					if (cc == -1)
-					{
-						perror(argv[0]);
-						printf("%s: recvfrom error\n", argv[0]);
-						exit(1);
-					}
-					/* Make sure the message received is
-					 * null terminated.
-					 */
-					buffer[cc] = '\0';
-					serverUDP(s_UDP, buffer, clientaddr_in);
+				/* This call will block until a new
+				* request arrives.  Then, it will
+				* return the address of the client,
+				* and a buffer containing its request.
+				* BUFFERSIZE - 1 bytes are read so that
+				* room is left at the end of the buffer
+				* for a null character.
+				*/
+				cc = recvfrom(s_UDP, buffer, BUFFERSIZE - 1, 0,
+				(struct sockaddr *)&clientaddr_in, &addrlen);
+				if (cc == -1)
+				{
+					perror(argv[0]);
+					printf("%s: recvfrom error\n", argv[0]);
+					exit(1);
 				}
-			}
+				/* Make sure the message received is
+				* null terminated.
+				*/
+
+				s_UDP_NEW = socket(AF_INET, SOCK_DGRAM, 0);
+				if (s_UDP_NEW == -1)
+				{
+					printf("Error creando socket UDP\n");
+					exit(1);
+				}
+
+				nuevoSocketUDP = myaddr_in;
+				nuevoSocketUDP.sin_port = 0;
+				if (bind(s_UDP_NEW, (struct sockaddr *)&nuevoSocketUDP, sizeof(struct sockaddr_in)) == -1)
+				{
+					printf("Error en bind\n");
+					exit(1);
+				}
+
+				addrlen = sizeof(struct sockaddr_in);
+				if (getsockname(s_UDP_NEW, (struct sockaddr *)&nuevoSocketUDP, &addrlen) == -1)
+				{
+					printf("Error en getsockname\n");
+					exit(1);
+				}
+
+				switch (fork())
+				{
+					case -1: /* Can't fork, just exit. */
+						exit(1);
+					case 0: /* Child process comes here. */
+						sprintf(buffer, "%d", ntohs(nuevoSocketUDP.sin_port));
+						if (sendto(s_UDP, buffer, TAM_BUFFER, 0, (struct sockaddr *)&clientaddr_in, addrlen) == -1)
+						{
+						printf("Error en sendto\n");
+						perror("sendto");
+						exit(1);
+						}
+						close(s_UDP); /* Close the listen socket inherited from the daemon. */
+						serverUDP(s_UDP_NEW, buffer, clientaddr_in);
+						exit(0);
+					default: /* Daemon process comes here. */
+						/* The daemon needs to remember
+						* to close the new accept socket
+						* after forking the child.  This
+						* prevents the daemon from running
+						* out of file descriptor space.  It
+						* also means that when the server
+						* closes the socket, that it will
+						* allow the socket to be destroyed
+						* since it will be the last close.
+						*/
+						close(s_UDP_NEW);
+				}
+			} /* UDP */
 		} /* Fin del bucle infinito de atenci�n a clientes */
 		/* Cerramos los sockets UDP y TCP */
 		close(ls_TCP);
@@ -785,6 +833,18 @@ void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in)
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
+
+	// Limpiar el buffer
+	memset(buffer, 0, TAM_BUFFER);
+
+	// Recibir el mensaje del cliente
+	int nc = recvfrom(s, buffer, TAM_BUFFER, 0, (struct sockaddr *)&clientaddr_in, &addrlen);
+	if (nc == -1)
+	{
+		perror("serverUDP");
+		printf("%s: recvfrom error\n", "serverUDP");
+		return;
+	}
 
 	procesar_peticion_UDP(s, buffer, clientaddr_in, addrlen);
 
