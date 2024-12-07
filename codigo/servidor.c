@@ -244,7 +244,7 @@ char * devuelveinf(char *user)
 							  Directory: %s\t\t\t\tShell: %s\n \
 							  Office: -\t\t\t\tHome Phone: -\n \
 							  %s\n \
-							  %s\n \
+							  idle %s\n \
 							  %s\n \
 							  %s\r\n",
 			 login, name, directory, shell,
