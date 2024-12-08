@@ -214,17 +214,17 @@ char *devuelveinf(char *user)
 	snprintf(comando, TAM_BUFFER, "w | grep %s", user);
 	if ((fp = popen(comando, "r")) == NULL)
 	{	
-		printf("No ha sido posible ejecutar el comando w para %s\n", user);
-		snprintf(idleTime, TAM_BUFFER, " ");
+		printf("Error al ejecutar el comando w\n");
+		return NULL; 
+	}
+	memset(salida, 0, TAM_BUFFER);
+	// Leer la salida del comando
+	if (fgets(salida, TAM_BUFFER, fp) == NULL)
+	{
+		printf("Error al leer la salida de w para %s.\n", user);
+		pclose(fp);
+		snprintf(idleTime, TAM_BUFFER, "0:00");
 	} else {
-		memset(salida, 0, TAM_BUFFER);
-		// Leer la salida del comando
-		if (fgets(salida, TAM_BUFFER, fp) == NULL)
-		{
-			printf("Error al leer la salida de w.\n");
-			pclose(fp);
-			return NULL;
-		}
 		pclose(fp);
 		// Extraer el valor de IDLE
 		separador = strtok(salida, " ");
@@ -243,7 +243,6 @@ char *devuelveinf(char *user)
 		}
 	}
 	
-
 	// Construir la respuesta.
 	memset(infoConexion, 0, TAM_BUFFER);
 	snprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
