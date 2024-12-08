@@ -2,7 +2,7 @@
 ** Fichero: cliente.c 
 ** Autores:
 ** Diego Borrallo Herrero DNI 49367527M
-** Jaime Castellanos Blanco DNI 
+** Jaime Castellanos Rubio DNI 71047797S
 */
 
 #include <sys/types.h>
