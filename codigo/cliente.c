@@ -317,7 +317,6 @@ char *argv[];
 
             while (1) {
                 printf("Recibiendo respuesta...\n");
-                alarm(TIMEOUT);
                 if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                     if (errno == EINTR) {
                         printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
@@ -330,13 +329,12 @@ char *argv[];
                 } else {
                     alarm(0);
                     respuesta_UDP[cc] = '\0';
-                    printf("Respuesta del servidor: %s\n", respuesta_UDP);
+                    printf("%s\n", respuesta_UDP);
                     if(strcmp(respuesta_UDP, "\r\n") == 0){
                         printf("Saliendo...\n");
                         break;
                     }
                 }
-
             }
 
             break;

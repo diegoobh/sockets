@@ -102,7 +102,6 @@ char *devuelveinf(char *user)
 	}
 
 	pclose(fp);
-	printf("Salida obtenida: %s\n", salida);
 	// Obtener los campos de la salida:
 	char *separador;
 	if ((separador = strtok(salida, ":")) != NULL)
@@ -261,13 +260,10 @@ char *devuelveinf(char *user)
 
 void procesar_peticion_TCP(int s, char *usuario)
 {
-	printf("Entro funcion usuario: %s\n", usuario);
 	char *infoUsuario;
 
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
-		printf("Usuario no vacio\n");
-
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
 		size_t len = strlen(usuario);
 		if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r'))
@@ -281,7 +277,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 
 		infoUsuario = devuelveinf(usuario);
 
-		printf("Enviando respuesta...\n");
+		printf("Enviando respuesta de usuario %s\n", usuario);
 
 		if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 		{
@@ -290,7 +286,6 @@ void procesar_peticion_TCP(int s, char *usuario)
 	}
 	else
 	{ // Petición vacía
-		printf("Petición vacía.\n");
 		char linea[TAM_BUFFER];
 
 		// // Obtener información de todos los usuarios.
@@ -305,10 +300,8 @@ void procesar_peticion_TCP(int s, char *usuario)
 		memset(linea, 0, TAM_BUFFER);
 		while (fgets(linea, TAM_BUFFER, fp) != NULL)
 		{
-			printf("Leyendo línea: %s\n", linea);
 			// Extraer el primer campo (login)
 			char *user = strtok(linea, " ");
-			printf("Usuario: %s\n", user);
 			if (user != NULL)
 			{
 				// Obtener datos del usuario
@@ -332,13 +325,11 @@ void procesar_peticion_TCP(int s, char *usuario)
 
 void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_in, int addrlen)
 {
-	printf("Entro funcion usuario: %s\n", usuario);
 	char *infoUsuario = NULL;
 	int nc;
 
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
-		printf("Usuario no vacio\n");
 
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
 		size_t len = strlen(usuario);
@@ -353,7 +344,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 
 		infoUsuario = devuelveinf(usuario);
 
-		printf("Enviando respuesta...\n");
+		printf("Enviando respuesta de usuario %s\n", usuario);
 
 		nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 		if (nc == -1)
@@ -365,7 +356,6 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 	}
 	else
 	{ // Petición vacía
-		printf("Petición vacía.\n");
 		char linea[TAM_BUFFER];
 
 		// // Obtener información de todos los usuarios.
@@ -380,10 +370,8 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 		memset(linea, 0, TAM_BUFFER);
 		while (fgets(linea, TAM_BUFFER, fp) != NULL)
 		{
-			printf("Leyendo línea: %s\n", linea);
 			// Extraer el primer campo (login)
 			char *user = strtok(linea, " ");
-			printf("Usuario: %s\n", user);
 			if (user != NULL)
 			{
 				// Obtener datos del usuario
@@ -396,9 +384,6 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 					printf("%s: sendto error\n", "serverUDP");
 					return;
 				}
-				// free(infoUsuario);
-				// infoUsuario = NULL;
-				// memset(linea, 0, TAM_BUFFER);
 			}
 		}
 	}
