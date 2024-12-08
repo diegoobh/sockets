@@ -68,8 +68,6 @@ char *argv[];
         snprintf(peticion, TAM_BUFFER, "%s\r\n", argv[2]);
     }
 
-    fprintf(stderr, "Mensaje a enviar: %s\n", peticion);
-
     // Buscamos @ en la cadena
     char *posicion = strchr(peticion, '@');
 
@@ -117,9 +115,6 @@ char *argv[];
         }
     }
 
-    printf("Usuario: %s\n", usuario);
-    printf("Host: %s\n", hostname);
-
     if (strcmp(argv[1], "TCP") == 0) {
         /* Create the socket. */
         s = socket (AF_INET, SOCK_STREAM, 0);
@@ -141,7 +136,6 @@ char *argv[];
         memset (&hints, 0, sizeof (hints));
         hints.ai_family = AF_INET;
 
-        printf("Resolviendo la IP de %s\n", hostname);
         /* esta funci�n es la recomendada para la compatibilidad con IPv6 gethostbyname queda obsoleta*/
         errcode = getaddrinfo(hostname, NULL, &hints, &res); 
         if (errcode != 0){
@@ -168,14 +162,13 @@ char *argv[];
             fprintf(stderr, "%s: unable to connect to remote\n", argv[0]);
             exit(1);
         }
-        printf("Conectados a %s\n", hostname);
-            /* Since the connect call assigns a free address
-            * to the local end of this connection, let's use
-            * getsockname to see what it assigned.  Note that
-            * addrlen needs to be passed in as a pointer,
-            * because getsockname returns the actual length
-            * of the address.
-            */
+        /* Since the connect call assigns a free address
+        * to the local end of this connection, let's use
+        * getsockname to see what it assigned.  Note that
+        * addrlen needs to be passed in as a pointer,
+        * because getsockname returns the actual length
+        * of the address.
+        */
         addrlen = sizeof(struct sockaddr_in);
         if (getsockname(s, (struct sockaddr *)&myaddr_in, &addrlen) == -1) {
             perror(argv[0]);
@@ -195,13 +188,10 @@ char *argv[];
                 hostname, ntohs(myaddr_in.sin_port), (char *) ctime(&timevar));
 
         /* Send the request to the server */
-        printf("Enviando mensaje: %s\n", usuario);
         if (send(s, usuario, strlen(usuario), 0) != strlen(usuario)) {
             fprintf(stderr, "%s: Connection aborted on error ", argv[0]);
             exit(1);
         }
-
-        printf("Mensaje enviado: %s\n", usuario);
 
         /* Now, start receiving all of the replys from the server.
         * This loop will terminate when the recv returns zero,
@@ -219,7 +209,7 @@ char *argv[];
                 break;
             }
             respuesta_TCP[i] = '\0';
-            printf("Resuesta del servidor: \n%s", respuesta_TCP);
+            printf("\n%s\n", respuesta_TCP);
         }
 
         // Cerrar el socket al finalizar la conexión 
@@ -306,7 +296,6 @@ char *argv[];
 
         while (n_retry > 0) {
       
-            printf("Enviando mensaje: %s\n", usuario);
             if (sendto(s, usuario, strlen(usuario), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
                 perror(argv[0]);
                 fprintf(stderr, "%s: unable to send request\n", argv[0]);
@@ -315,8 +304,7 @@ char *argv[];
 
             alarm(TIMEOUT);
 
-            while (1) {
-                printf("Recibiendo respuesta...\n");
+            while (1 && n_retry > 0) {
                 if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                     if (errno == EINTR) {
                         printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
@@ -329,14 +317,12 @@ char *argv[];
                 } else {
                     alarm(0);
                     respuesta_UDP[cc] = '\0';
-                    printf("%s\n", respuesta_UDP);
+                    printf("\n%s\n", respuesta_UDP);
                     if(strcmp(respuesta_UDP, "\r\n") == 0){
-                        printf("Saliendo...\n");
                         break;
                     }
                 }
             }
-
             break;
         }
 

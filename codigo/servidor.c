@@ -43,7 +43,8 @@ void procesar_peticion_UDP(int s, char *buf, struct sockaddr_in clientaddr_in, i
 
 int FIN = 0; /* Para el cierre ordenado */
 void finalizar() { FIN = 1; }
-char *devuelveinf(char *user)
+// Devuelve la informacion formateada del usuario pasado por parametro
+char *devuelveinf(char *user) 
 {
 	char login[TAM_BUFFER];
 	char name[TAM_BUFFER];
@@ -73,7 +74,7 @@ char *devuelveinf(char *user)
 	}
 	// Leer la salida del comando
 	if (fgets(linea, TAM_BUFFER, fp) != NULL)
-	{
+	{ // Usuario encontrado
 		// Copiar el contenido de la linea para no modificar la original
 		char contenido[TAM_BUFFER];
 		memset(contenido, 0, TAM_BUFFER);
@@ -87,14 +88,12 @@ char *devuelveinf(char *user)
 
 		if (strcmp(usuario_linea, user) == 0)
 		{
-			printf("Usuario encontrado: %s\n", usuario_linea);
 			memset(salida, 0, TAM_BUFFER);
 			strncpy(salida, linea, TAM_BUFFER);
 		}
 	}
 	else
-	{
-		printf("Usuario no encontrado.\n");
+	{ // No se encuentra el usuario
 		pclose(fp);
 		memset(respuesta, 0, TAM_BUFFER);
 		snprintf(respuesta, TAM_BUFFER, "%s: no such user\n", user);
@@ -220,11 +219,12 @@ char *devuelveinf(char *user)
 	memset(salida, 0, TAM_BUFFER);
 	// Leer la salida del comando
 	if (fgets(salida, TAM_BUFFER, fp) == NULL)
-	{
-		printf("Error al leer la salida de w para %s.\n", user);
+	{ // El usuario no esta conectado
 		pclose(fp);
+		memset(idleTime, 0, TAM_BUFFER);
 		snprintf(idleTime, TAM_BUFFER, "0:00");
-	} else {
+	} else 
+	{ // El usuario esta conectado
 		pclose(fp);
 		// Extraer el valor de IDLE
 		separador = strtok(salida, " ");
@@ -259,6 +259,7 @@ char *devuelveinf(char *user)
 	return respuesta;
 }
 
+// Se encarga de procesar las peticiones de procesos TCP
 void procesar_peticion_TCP(int s, char *usuario)
 {
 	char *infoUsuario;
@@ -277,8 +278,6 @@ void procesar_peticion_TCP(int s, char *usuario)
 		}
 
 		infoUsuario = devuelveinf(usuario);
-
-		printf("Enviando respuesta de usuario %s\n", usuario);
 
 		if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 		{
@@ -316,6 +315,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 		}
 	}
 
+	// Enviar mensaje de fin de conexion
 	memset(infoUsuario, 0, TAM_BUFFER);
 	snprintf(infoUsuario, TAM_BUFFER, "\r\n");
 	if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
@@ -324,6 +324,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 	}
 }
 
+// Se encarga de procesar las peticiones de procesos UDP
 void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_in, int addrlen)
 {
 	char *infoUsuario = NULL;
@@ -345,9 +346,6 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 
 		infoUsuario = devuelveinf(usuario);
 
-		printf("Información del usuario %s\n", usuario);
-		printf("%s\n", infoUsuario);
-
 		nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 		if (nc == -1)
 		{
@@ -355,7 +353,6 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			printf("%s: sendto error\n", "serverUDP");
 			return;
 		}
-		infoUsuario = NULL;
 	}
 	else
 	{ // Petición vacía
@@ -387,12 +384,12 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 					printf("%s: sendto error\n", "serverUDP");
 					return;
 				}
-				infoUsuario = NULL;
 			}
 			memset(linea, 0, TAM_BUFFER);
 		}
 	}
 
+	// Enviar mensaje de fin de conexion
 	memset(infoUsuario, 0, TAM_BUFFER);
 	snprintf(infoUsuario, TAM_BUFFER, "\r\n");
 	nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
@@ -778,7 +775,6 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	{
 		if (len == -1)
 			errout(hostname);
-		printf("Mensaje recibido: %s\n", buf);
 
 		procesar_peticion_TCP(s, buf);
 
