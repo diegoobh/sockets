@@ -289,8 +289,11 @@ void procesar_peticion_TCP(int s, char *usuario)
 			printf("Error al ejecutar el comando getent.\n");
 			return;
 		}
+		printf("ANTES WHILE");
 		while(!leido){
+			printf("DESPUES WHILE");
 			if(fgets(salida, TAM_BUFFER, fp) != NULL){
+				printf("DENTRO IF");
 				// Eliminar el salto de línea al final de la línea
 				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
 
@@ -309,23 +312,23 @@ void procesar_peticion_TCP(int s, char *usuario)
 				} else {
 					infoUsuario = devuelveinf(usuario_linea);
 
-					printf("Envio info usuario: %s", usuario_linea);
-
 					if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 					{
 						fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 					}
+				}
+				if(feof(fp)){
+					leido = 1;
 				}
 			} else {
-				if (ferror(fp)) {
-					memset(infoUsuario, 0, TAM_BUFFER);
-					snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
-					if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
-					{
-						fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
-					}
-				}
+				printf("No existe el usuario");
 				leido = 1;
+				//memset(infoUsuario, 0, TAM_BUFFER);
+				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+				if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
+				{
+					fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+				}
 			}
 		}
 	}
@@ -401,8 +404,11 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			printf("Error al ejecutar el comando getent.\n");
 			return;
 		}
+		printf("ANTES WHILE");
 		while(!leido){
+			printf("DESPUES WHILE");
 			if(fgets(salida, TAM_BUFFER, fp) != NULL){
+				printf("DENTRO IF");
 				// Eliminar el salto de línea al final de la línea
 				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
 
@@ -424,8 +430,6 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 				} else {
 					infoUsuario = devuelveinf(usuario_linea);
 
-					printf("Envio info usuario: %s", usuario_linea);
-
 					nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 					if (nc == -1)
 					{
@@ -433,20 +437,22 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 						printf("%s: sendto error\n", "serverUDP");
 						return;
 					}
+				}
+				if(feof(fp)){
+					leido = 1;
 				}
 			} else {
-				if (ferror(fp)) {
-					memset(infoUsuario, 0, TAM_BUFFER);
-					snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
-					nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
-					if (nc == -1)
-					{
-						perror("serverUDP");
-						printf("%s: sendto error\n", "serverUDP");
-						return;
-					}
-				}
+				printf("No existe el usuario");
 				leido = 1;
+				//memset(infoUsuario, 0, TAM_BUFFER);
+				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+				nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+				if (nc == -1)
+				{
+					perror("serverUDP");
+					printf("%s: sendto error\n", "serverUDP");
+					return;
+				}
 			}
 		}
 	}
