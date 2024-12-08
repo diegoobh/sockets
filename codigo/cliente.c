@@ -1,3 +1,10 @@
+/*
+** Fichero: cliente.c 
+** Autores:
+** Diego Borrallo Herrero DNI 49367527M
+** Jaime Castellanos Blanco DNI 
+*/
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/errno.h>
@@ -278,24 +285,24 @@ char *argv[];
 
         n_retry = RETRIES;
 
-        // Mandar msj vacio al server
+        // Mandar msj vacio al servidor para que nos devuelva el puerto
         char msj_vacio[TAM_BUFFER];
         memset(msj_vacio, 0, TAM_BUFFER);
-        snprintf(msj_vacio, TAM_BUFFER, "Nuevo Cliente UDP\r\n");
+        snprintf(msj_vacio, TAM_BUFFER, " ");
         if (sendto(s, msj_vacio, strlen(msj_vacio), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
             perror(argv[0]);
             fprintf(stderr, "%s: unable to send request\n", argv[0]);
             exit(1);
         }
-        // Actualizar puerto de la com con el server
+        // Recibirpuerto por el que se va a comunicar
         if ((cc = recvfrom(s, buf, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
             perror(argv[0]);
             fprintf(stderr, "%s: unable to get response\n", argv[0]);
             exit(1);
         }
+        // Actualizar el puerto 
         int nuevoPuerto = atoi(buf);
         servaddr_in.sin_port = htons(nuevoPuerto);
-        // Enviar mensaje al server ya con el puerto actualizado
 
         while (n_retry > 0) {
       
@@ -309,7 +316,8 @@ char *argv[];
             alarm(TIMEOUT);
 
             while (1) {
-                printf("Recerviendo respuesta...\n");
+                printf("Recibiendo respuesta...\n");
+                alarm(TIMEOUT);
                 if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                     if (errno == EINTR) {
                         printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
@@ -320,12 +328,11 @@ char *argv[];
                         exit(1);
                     }
                 } else {
-                    printf("He recibido respuesta\n");
                     alarm(0);
                     respuesta_UDP[cc] = '\0';
                     printf("Respuesta del servidor: %s\n", respuesta_UDP);
                     if(strcmp(respuesta_UDP, "\r\n") == 0){
-                        printf("Salidendo...\n");
+                        printf("Saliendo...\n");
                         break;
                     }
                 }

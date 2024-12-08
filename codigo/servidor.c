@@ -1,10 +1,10 @@
 /*
- *          		S E R V I D O R
- *
- *	This is an example program that demonstrates the use of
- *	sockets TCP and UDP as an IPC mechanism.
- *
- */
+** Fichero: servidor.c 
+** Autores:
+** Diego Borrallo Herrero DNI 49367527M
+** Jaime Castellanos Blanco DNI 
+*/
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/errno.h>
@@ -854,7 +854,12 @@ void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in)
 		return;
 	}
 
-	procesar_peticion_UDP(s, buffer, clientaddr_in, addrlen);
+	// Copiar el buffer en una variable local 
+	char usuario[TAM_BUFFER];
+	memset(usuario, 0, TAM_BUFFER);
+	strncpy(usuario, buffer, TAM_BUFFER);
+
+	procesar_peticion_UDP(s, usuario, clientaddr_in, addrlen);
 
 	close(s);
 }
