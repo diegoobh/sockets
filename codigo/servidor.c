@@ -375,6 +375,8 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 	char *infoUsuario = NULL;
 	int nc;
 	int leido = 0; 
+	char comando[TAM_BUFFER]; 
+	char salida[TAM_BUFFER];
 
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
