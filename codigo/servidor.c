@@ -213,34 +213,36 @@ char *devuelveinf(char *user)
 	memset(comando, 0, TAM_BUFFER);
 	snprintf(comando, TAM_BUFFER, "w | grep %s", user);
 	if ((fp = popen(comando, "r")) == NULL)
-	{
-		printf("Error al ejecutar el comando w\n");
-		return NULL;
-	}
-	memset(salida, 0, TAM_BUFFER);
-	// Leer la salida del comando
-	if (fgets(salida, TAM_BUFFER, fp) == NULL)
-	{
-		printf("Error al leer la salida de w.\n");
-		pclose(fp);
-		return NULL;
-	}
-	pclose(fp);
-	// Extraer el valor de IDLE
-	separador = strtok(salida, " ");
-	int i = 0;
-	while (separador != NULL)
-	{
-		i++;
-		if (i == 5)
-		{ // La columna IDLE está en la quinta posición
-			memset(idleTime, 0, TAM_BUFFER);
-			strncpy(idleTime, separador, TAM_BUFFER - 1);
-			idleTime[TAM_BUFFER - 1] = '\0'; // Asegurar que termina en null
-			break;
+	{	
+		printf("No ha sido posible ejecutar el comando w para %s\n", user);
+		snprintf(idleTime, TAM_BUFFER, " ");
+	} else {
+		memset(salida, 0, TAM_BUFFER);
+		// Leer la salida del comando
+		if (fgets(salida, TAM_BUFFER, fp) == NULL)
+		{
+			printf("Error al leer la salida de w.\n");
+			pclose(fp);
+			return NULL;
 		}
-		separador = strtok(NULL, " ");
+		pclose(fp);
+		// Extraer el valor de IDLE
+		separador = strtok(salida, " ");
+		int i = 0;
+		while (separador != NULL)
+		{
+			i++;
+			if (i == 5)
+			{ // La columna IDLE está en la quinta posición
+				memset(idleTime, 0, TAM_BUFFER);
+				strncpy(idleTime, separador, TAM_BUFFER - 1);
+				idleTime[TAM_BUFFER - 1] = '\0'; // Asegurar que termina en null
+				break;
+			}
+			separador = strtok(NULL, " ");
+		}
 	}
+	
 
 	// Construir la respuesta.
 	memset(infoConexion, 0, TAM_BUFFER);
@@ -344,7 +346,8 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 
 		infoUsuario = devuelveinf(usuario);
 
-		printf("Enviando respuesta de usuario %s\n", usuario);
+		printf("Información del usuario %s\n", usuario);
+		printf("%s\n", infoUsuario);
 
 		nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 		if (nc == -1)
@@ -353,6 +356,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			printf("%s: sendto error\n", "serverUDP");
 			return;
 		}
+		infoUsuario = NULL;
 	}
 	else
 	{ // Petición vacía
@@ -384,7 +388,9 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 					printf("%s: sendto error\n", "serverUDP");
 					return;
 				}
+				infoUsuario = NULL;
 			}
+			memset(linea, 0, TAM_BUFFER);
 		}
 	}
 
