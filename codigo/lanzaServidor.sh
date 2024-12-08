@@ -7,7 +7,7 @@
 ./cliente TCP zxcvb@nogal.usal.es &
 ./cliente TCP p1777001@nogal.usal.es &
 ./cliente UDP &
-./cliente UDP i9367527 &
+./cliente UDP david &
 ./cliente UDP @nogal.usal.es &
 ./cliente UDP zxcvb@nogal.usal.es &
 ./cliente UDP p1777001@nogal.usal.es &
