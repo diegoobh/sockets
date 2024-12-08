@@ -263,6 +263,9 @@ char *devuelveinf(char *user)
 void procesar_peticion_TCP(int s, char *usuario)
 {
 	char *infoUsuario;
+	char comando[TAM_BUFFER];
+	char salida[TAM_BUFFER];
+	int leido = 0;
 
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
@@ -277,11 +280,49 @@ void procesar_peticion_TCP(int s, char *usuario)
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
 
-		infoUsuario = devuelveinf(usuario);
-
-		if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
+		// Verificar si es nombre o login
+		FILE *fp;
+		memset(comando, 0, TAM_BUFFER);
+		snprintf(comando, TAM_BUFFER, "getent passwd | grep %s", usuario);
+		if ((fp = popen(comando, "r")) == NULL)
 		{
-			fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+			printf("Error al ejecutar el comando getent.\n");
+			return;
+		}
+		while(!leido){
+			if(fgets(salida, TAM_BUFFER, fp) != NULL){
+				// Eliminar el salto de línea al final de la línea
+				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
+
+				// Obtener el primer campo de la línea (usuario) hasta el primer ':'
+				char *usuario_linea = strtok(salida, ":");
+
+				if (strcmp(usuario_linea, usuario) == 0)
+				{	
+					leido = 1;
+					infoUsuario = devuelveinf(usuario);
+
+					if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
+					{
+						fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+					}
+				} else {
+					infoUsuario = devuelveinf(usuario_linea);
+
+					printf("Envio info usuario: %s", usuario_linea);
+
+					if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
+					{
+						fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+					}
+				}
+			} else {
+				if (ferror(fp)) {
+					memset(infoUsuario, 0, TAM_BUFFER);
+					snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+				}
+				leido = 1;
+			}
 		}
 	}
 	else
@@ -344,14 +385,58 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
 
-		infoUsuario = devuelveinf(usuario);
-
-		nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
-		if (nc == -1)
+				// Verificar si es usuario o login
+		FILE *fp;
+		memset(comando, 0, TAM_BUFFER);
+		snprintf(comando, TAM_BUFFER, "getent passwd | grep %s", usuario);
+		if ((fp = popen(comando, "r")) == NULL)
 		{
-			perror("serverUDP");
-			printf("%s: sendto error\n", "serverUDP");
+			printf("Error al ejecutar el comando getent.\n");
 			return;
+		}
+		while(!leido){
+			if(fgets(salida, TAM_BUFFER, fp) != NULL){
+				// Eliminar el salto de línea al final de la línea
+				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
+
+				// Obtener el primer campo de la línea (usuario) hasta el primer ':'
+				char *usuario_linea = strtok(salida, ":");
+
+				printf("Usuario_linea: %s", usuario_linea);
+				printf("Usuario introducido: %s", usuario);
+
+				if (strcmp(usuario_linea, usuario) == 0)
+				{	
+					leido = 1;
+					infoUsuario = devuelveinf(usuario);
+
+					nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+					if (nc == -1)
+					{
+						perror("serverUDP");
+						printf("%s: sendto error\n", "serverUDP");
+						return;
+					}
+				} else {
+					infoUsuario = devuelveinf(usuario_linea);
+
+					printf("Envio info usuario: %s", usuario_linea);
+
+					nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+					if (nc == -1)
+					{
+						perror("serverUDP");
+						printf("%s: sendto error\n", "serverUDP");
+						return;
+					}
+				}
+			} else {
+				if (ferror(fp)) {
+					memset(infoUsuario, 0, TAM_BUFFER);
+					snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+				}
+				leido = 1;
+			}
 		}
 	}
 	else
