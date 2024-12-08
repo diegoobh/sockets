@@ -320,6 +320,10 @@ void procesar_peticion_TCP(int s, char *usuario)
 				if (ferror(fp)) {
 					memset(infoUsuario, 0, TAM_BUFFER);
 					snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+					if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
+					{
+						fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+					}
 				}
 				leido = 1;
 			}
@@ -370,6 +374,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 {
 	char *infoUsuario = NULL;
 	int nc;
+	int leido = 0; 
 
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
@@ -385,7 +390,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
 
-				// Verificar si es usuario o login
+		// Verificar si es nombre o login
 		FILE *fp;
 		memset(comando, 0, TAM_BUFFER);
 		snprintf(comando, TAM_BUFFER, "getent passwd | grep %s", usuario);
@@ -401,9 +406,6 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 
 				// Obtener el primer campo de la línea (usuario) hasta el primer ':'
 				char *usuario_linea = strtok(salida, ":");
-
-				printf("Usuario_linea: %s", usuario_linea);
-				printf("Usuario introducido: %s", usuario);
 
 				if (strcmp(usuario_linea, usuario) == 0)
 				{	
@@ -434,6 +436,13 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 				if (ferror(fp)) {
 					memset(infoUsuario, 0, TAM_BUFFER);
 					snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+					nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+					if (nc == -1)
+					{
+						perror("serverUDP");
+						printf("%s: sendto error\n", "serverUDP");
+						return;
+					}
 				}
 				leido = 1;
 			}
