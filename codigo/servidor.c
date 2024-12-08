@@ -1,5 +1,5 @@
 /*
-** Fichero: servidor.c 
+** Fichero: servidor.c
 ** Autores:
 ** Diego Borrallo Herrero DNI 49367527M
 ** Jaime Castellanos Rubio DNI 71047797S
@@ -43,8 +43,29 @@ void procesar_peticion_UDP(int s, char *buf, struct sockaddr_in clientaddr_in, i
 
 int FIN = 0; /* Para el cierre ordenado */
 void finalizar() { FIN = 1; }
+
+int user_exists(const char *username) {
+    FILE *file = fopen("/etc/passwd", "r");
+    if (!file) {
+        perror("Error opening /etc/passwd");
+        return 0; // Assume user does not exist if file cannot be read
+    }
+
+    char line[256]; // Buffer to store each line of the file
+    size_t username_len = strlen(username);
+
+    while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, username, username_len) == 0 && line[username_len] == ':') {
+            fclose(file);
+            return 1; // User found
+        }
+    }
+
+    fclose(file);
+    return 0; // User not found
+}
 // Devuelve la informacion formateada del usuario pasado por parametro
-char *devuelveinf(char *user) 
+char *devuelveinf(char *user)
 {
 	char login[TAM_BUFFER];
 	char name[TAM_BUFFER];
@@ -212,9 +233,9 @@ char *devuelveinf(char *user)
 	memset(comando, 0, TAM_BUFFER);
 	snprintf(comando, TAM_BUFFER, "w | grep %s", user);
 	if ((fp = popen(comando, "r")) == NULL)
-	{	
+	{
 		printf("Error al ejecutar el comando w\n");
-		return NULL; 
+		return NULL;
 	}
 	memset(salida, 0, TAM_BUFFER);
 	// Leer la salida del comando
@@ -223,7 +244,8 @@ char *devuelveinf(char *user)
 		pclose(fp);
 		memset(idleTime, 0, TAM_BUFFER);
 		snprintf(idleTime, TAM_BUFFER, "0:00");
-	} else 
+	}
+	else
 	{ // El usuario esta conectado
 		pclose(fp);
 		// Extraer el valor de IDLE
@@ -242,7 +264,7 @@ char *devuelveinf(char *user)
 			separador = strtok(NULL, " ");
 		}
 	}
-	
+
 	// Construir la respuesta.
 	memset(infoConexion, 0, TAM_BUFFER);
 	snprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
@@ -262,13 +284,17 @@ char *devuelveinf(char *user)
 // Se encarga de procesar las peticiones de procesos TCP
 void procesar_peticion_TCP(int s, char *usuario)
 {
-	char *infoUsuario;
+	char *infoUsuario=NULL;
 	char comando[TAM_BUFFER];
 	char salida[TAM_BUFFER];
 	int leido = 0;
 
+	printf("Usuarioaaaa: %s\n", usuario);
+
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
+		printf("1");
+		
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
 		size_t len = strlen(usuario);
 		if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r'))
@@ -279,7 +305,16 @@ void procesar_peticion_TCP(int s, char *usuario)
 		{
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
-
+		
+		if (user_exists(usuario)==0){
+			infoUsuario = "No existe el usuario";
+			if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
+			{
+				fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
+			}
+			printf("No existe el usuario");
+			return;
+		}
 		// Verificar si es nombre o login
 		FILE *fp;
 		memset(comando, 0, TAM_BUFFER);
@@ -290,9 +325,11 @@ void procesar_peticion_TCP(int s, char *usuario)
 			return;
 		}
 		printf("ANTES WHILE");
-		while(!leido){
+		while (!leido)
+		{
 			printf("DESPUES WHILE");
-			if(fgets(salida, TAM_BUFFER, fp) != NULL){
+			if (fgets(salida, TAM_BUFFER, fp) != NULL)
+			{
 				printf("DENTRO IF");
 				// Eliminar el salto de línea al final de la línea
 				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
@@ -301,7 +338,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 				char *usuario_linea = strtok(salida, ":");
 
 				if (strcmp(usuario_linea, usuario) == 0)
-				{	
+				{
 					leido = 1;
 					infoUsuario = devuelveinf(usuario);
 
@@ -309,7 +346,9 @@ void procesar_peticion_TCP(int s, char *usuario)
 					{
 						fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 					}
-				} else {
+				}
+				else
+				{
 					infoUsuario = devuelveinf(usuario_linea);
 
 					if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
@@ -317,14 +356,17 @@ void procesar_peticion_TCP(int s, char *usuario)
 						fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 					}
 				}
-				if(feof(fp)){
+				if (feof(fp))
+				{
 					leido = 1;
 				}
-			} else {
+			}
+			else
+			{
 				printf("No existe el usuario");
 				leido = 1;
-				//memset(infoUsuario, 0, TAM_BUFFER);
-				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+				// memset(infoUsuario, 0, TAM_BUFFER);
+				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario);
 				if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 				{
 					fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
@@ -334,6 +376,9 @@ void procesar_peticion_TCP(int s, char *usuario)
 	}
 	else
 	{ // Petición vacía
+
+		printf("Usuario sdsdssdsd: %s\n", usuario);
+		fflush(stdout);
 		char linea[TAM_BUFFER];
 
 		// // Obtener información de todos los usuarios.
@@ -377,12 +422,15 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 {
 	char *infoUsuario = NULL;
 	int nc;
-	int leido = 0; 
-	char comando[TAM_BUFFER]; 
+	int leido = 0;
+	char comando[TAM_BUFFER];
 	char salida[TAM_BUFFER];
-
+	
+	printf("Usuario: %s\n", usuario);
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
+
+		printf("Usuario sdsdssdsd: %s\n", usuario);
 
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
 		size_t len = strlen(usuario);
@@ -394,7 +442,19 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 		{
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
-
+		int usuario_existe = user_exists(usuario);
+		if (usuario_existe==0){
+			infoUsuario = "No existe el usuario";
+			nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
+			if (nc == -1)
+			{
+				perror("serverUDP");
+				printf("%s: sendto error\n", "serverUDP");
+				return;
+			}
+			printf("No existe el usuario");
+			return;
+		}
 		// Verificar si es nombre o login
 		FILE *fp;
 		memset(comando, 0, TAM_BUFFER);
@@ -405,9 +465,11 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			return;
 		}
 		printf("ANTES WHILE");
-		while(!leido){
+		while (!leido)
+		{
 			printf("DESPUES WHILE");
-			if(fgets(salida, TAM_BUFFER, fp) != NULL){
+			if (fgets(salida, TAM_BUFFER, fp) != NULL)
+			{
 				printf("DENTRO IF");
 				// Eliminar el salto de línea al final de la línea
 				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
@@ -416,7 +478,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 				char *usuario_linea = strtok(salida, ":");
 
 				if (strcmp(usuario_linea, usuario) == 0)
-				{	
+				{
 					leido = 1;
 					infoUsuario = devuelveinf(usuario);
 
@@ -427,7 +489,9 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 						printf("%s: sendto error\n", "serverUDP");
 						return;
 					}
-				} else {
+				}
+				else
+				{
 					infoUsuario = devuelveinf(usuario_linea);
 
 					nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
@@ -438,14 +502,17 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 						return;
 					}
 				}
-				if(feof(fp)){
+				if (feof(fp))
+				{
 					leido = 1;
 				}
-			} else {
+			}
+			else
+			{
 				printf("No existe el usuario");
 				leido = 1;
-				//memset(infoUsuario, 0, TAM_BUFFER);
-				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario); 
+				// memset(infoUsuario, 0, TAM_BUFFER);
+				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario);
 				nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 				if (nc == -1)
 				{
@@ -876,7 +943,7 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	while (len = recv(s, buf, TAM_BUFFER, 0))
 	{
 		if (len == -1)
-			errout(hostname);
+			errout(hostname);//(Quitamos el error) para que no salga por pantalla
 
 		procesar_peticion_TCP(s, buf);
 
@@ -942,7 +1009,7 @@ void serverUDP(int s, char *buffer, struct sockaddr_in clientaddr_in)
 		return;
 	}
 
-	// Copiar el buffer en una variable local 
+	// Copiar el buffer en una variable local
 	char usuario[TAM_BUFFER];
 	memset(usuario, 0, TAM_BUFFER);
 	strncpy(usuario, buffer, TAM_BUFFER);
