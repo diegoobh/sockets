@@ -44,26 +44,6 @@ void procesar_peticion_UDP(int s, char *buf, struct sockaddr_in clientaddr_in, i
 int FIN = 0; /* Para el cierre ordenado */
 void finalizar() { FIN = 1; }
 
-int user_exists(const char *username) {
-    FILE *file = fopen("/etc/passwd", "r");
-    if (!file) {
-        perror("Error opening /etc/passwd");
-        return 0; // Assume user does not exist if file cannot be read
-    }
-
-    char line[256]; // Buffer to store each line of the file
-    size_t username_len = strlen(username);
-
-    while (fgets(line, sizeof(line), file)) {
-        if (strncmp(line, username, username_len) == 0 && line[username_len] == ':') {
-            fclose(file);
-            return 1; // User found
-        }
-    }
-
-    fclose(file);
-    return 0; // User not found
-}
 // Devuelve la informacion formateada del usuario pasado por parametro
 char *devuelveinf(char *user)
 {
@@ -289,11 +269,8 @@ void procesar_peticion_TCP(int s, char *usuario)
 	char salida[TAM_BUFFER];
 	int leido = 0;
 
-	printf("Usuarioaaaa: %s\n", usuario);
-
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
-		printf("1");
 		
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
 		size_t len = strlen(usuario);
@@ -306,15 +283,6 @@ void procesar_peticion_TCP(int s, char *usuario)
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
 		
-		if (user_exists(usuario)==0){
-			infoUsuario = "No existe el usuario";
-			if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
-			{
-				fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
-			}
-			printf("No existe el usuario");
-			return;
-		}
 		// Verificar si es nombre o login
 		FILE *fp;
 		memset(comando, 0, TAM_BUFFER);
@@ -324,13 +292,10 @@ void procesar_peticion_TCP(int s, char *usuario)
 			printf("Error al ejecutar el comando getent.\n");
 			return;
 		}
-		printf("ANTES WHILE");
 		while (!leido)
 		{
-			printf("DESPUES WHILE");
 			if (fgets(salida, TAM_BUFFER, fp) != NULL)
 			{
-				printf("DENTRO IF");
 				// Eliminar el salto de línea al final de la línea
 				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
 
@@ -362,23 +327,19 @@ void procesar_peticion_TCP(int s, char *usuario)
 				}
 			}
 			else
-			{
-				printf("No existe el usuario");
-				leido = 1;
-				// memset(infoUsuario, 0, TAM_BUFFER);
-				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario);
+			{	
+				infoUsuario = strcat(usuario, ": no such user or no more users to find.");
 				if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 				{
 					fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
 				}
+
+				leido = 1;
 			}
 		}
 	}
 	else
 	{ // Petición vacía
-
-		printf("Usuario sdsdssdsd: %s\n", usuario);
-		fflush(stdout);
 		char linea[TAM_BUFFER];
 
 		// // Obtener información de todos los usuarios.
@@ -409,8 +370,7 @@ void procesar_peticion_TCP(int s, char *usuario)
 	}
 
 	// Enviar mensaje de fin de conexion
-	memset(infoUsuario, 0, TAM_BUFFER);
-	snprintf(infoUsuario, TAM_BUFFER, "\r\n");
+	sprintf(infoUsuario, "\r\n");
 	if (send(s, infoUsuario, strlen(infoUsuario), 0) != strlen(infoUsuario))
 	{
 		fprintf(stderr, "Servidor: Error al enviar respuesta al cliente\n");
@@ -426,12 +386,8 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 	char comando[TAM_BUFFER];
 	char salida[TAM_BUFFER];
 	
-	printf("Usuario: %s\n", usuario);
 	if (strcmp(usuario, "\r\n") != 0)
 	{ // Petición no vacía
-
-		printf("Usuario sdsdssdsd: %s\n", usuario);
-
 		// Eliminar los caracteres '\r\n' del final de la cadena 'usuario'
 		size_t len = strlen(usuario);
 		if (len > 0 && (usuario[len - 1] == '\n' || usuario[len - 1] == '\r'))
@@ -442,19 +398,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 		{
 			usuario[len - 2] = '\0'; // Eliminar el retorno de carro '\r' si existe
 		}
-		int usuario_existe = user_exists(usuario);
-		if (usuario_existe==0){
-			infoUsuario = "No existe el usuario";
-			nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
-			if (nc == -1)
-			{
-				perror("serverUDP");
-				printf("%s: sendto error\n", "serverUDP");
-				return;
-			}
-			printf("No existe el usuario");
-			return;
-		}
+
 		// Verificar si es nombre o login
 		FILE *fp;
 		memset(comando, 0, TAM_BUFFER);
@@ -464,13 +408,10 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			printf("Error al ejecutar el comando getent.\n");
 			return;
 		}
-		printf("ANTES WHILE");
 		while (!leido)
 		{
-			printf("DESPUES WHILE");
 			if (fgets(salida, TAM_BUFFER, fp) != NULL)
 			{
-				printf("DENTRO IF");
 				// Eliminar el salto de línea al final de la línea
 				salida[strcspn(salida, "\n")] = '\0'; // Eliminar el '\n'
 
@@ -509,10 +450,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 			}
 			else
 			{
-				printf("No existe el usuario");
-				leido = 1;
-				// memset(infoUsuario, 0, TAM_BUFFER);
-				snprintf(infoUsuario, TAM_BUFFER, "%s: no such user.", usuario);
+				infoUsuario = strcat(usuario, ": no such user or no more users to find.");
 				nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 				if (nc == -1)
 				{
@@ -520,6 +458,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 					printf("%s: sendto error\n", "serverUDP");
 					return;
 				}
+				leido = 1;
 			}
 		}
 	}
@@ -559,8 +498,7 @@ void procesar_peticion_UDP(int s, char *usuario, struct sockaddr_in clientaddr_i
 	}
 
 	// Enviar mensaje de fin de conexion
-	memset(infoUsuario, 0, TAM_BUFFER);
-	snprintf(infoUsuario, TAM_BUFFER, "\r\n");
+	sprintf(infoUsuario, "\r\n");
 	nc = sendto(s, infoUsuario, strlen(infoUsuario), 0, (struct sockaddr *)&clientaddr_in, addrlen);
 	if (nc == -1)
 	{
