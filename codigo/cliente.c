@@ -177,7 +177,7 @@ char *argv[];
         addrlen = sizeof(struct sockaddr_in);
         if (getsockname(s, (struct sockaddr *)&myaddr_in, &addrlen) == -1) {
             perror(argv[0]);
-            fprintf(fichero, "%s: unable to read socket address\n", argv[0]);
+            fprintf(stderr, "%s: unable to read socket address\n", argv[0]);
             exit(1);
         }
 
