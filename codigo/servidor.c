@@ -22,6 +22,7 @@
 #define ADDRNOTFOUND 0xffffffff /* return address for unfound host */
 #define TAM_BUFFER 516
 #define MAXHOST 128
+#define TIMEOUT 60
 
 extern int errno;
 
@@ -43,6 +44,7 @@ void procesar_peticion_UDP(int s, char *buf, struct sockaddr_in clientaddr_in, i
 
 int FIN = 0; /* Para el cierre ordenado */
 void finalizar() { FIN = 1; }
+void morir() { FIN = 1; }
 
 // Devuelve la informacion formateada del usuario pasado por parametro
 char *devuelveinf(char *user)
@@ -249,13 +251,7 @@ char *devuelveinf(char *user)
 	memset(infoConexion, 0, TAM_BUFFER);
 	snprintf(infoConexion, TAM_BUFFER, "On since %s on %s from %s", time, tty, ip);
 	memset(respuesta, 0, TAM_BUFFER);
-	snprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\t\tName: %s\n \
-							  Directory: %s\t\t\t\tShell: %s\n \
-							  Office: -\t\t\t\tHome Phone: -\n \
-							  %s\n \
-							  idle %s\n \
-							  %s\n \
-							  %s\r\n",
+	snprintf(respuesta, TAM_BUFFER, "\nLogin: %s\t\t\t\tName: %s\nDirectory: %s\t\tShell: %s\nOffice: -\t\t\t\tHome Phone: -\n %s\n idle %s\n %s\n %s\r\n",
 			 login, name, directory, shell,
 			 infoConexion, idleTime, mail, plan);
 	return respuesta;
@@ -533,6 +529,7 @@ char *argv[];
 	char buffer[TAM_BUFFER]; /* buffer for packets to be read into */
 
 	struct sigaction vec;
+	struct sigaction vec2;
 
 	/* Create the listen socket. */
 	ls_TCP = socket(AF_INET, SOCK_STREAM, 0);
@@ -653,8 +650,19 @@ char *argv[];
 			exit(1);
 		}
 
+		// Registrar alarma cont timeout de 60 segundos para que finalice si no se ejecuta un cliente 
+		vec.sa_handler = (void *)morir;
+		vec.sa_flags = 0;
+		if (sigaction(SIGALRM, &vec, (struct sigaction *)0) == -1)
+		{
+			perror(" sigaction(SIGALRM)");
+			fprintf(stderr, "%s: unable to register the SIGALRM signal\n", argv[0]);
+			exit(1);
+		}
+
 		while (!FIN)
 		{
+			alarm(TIMEOUT); // Iniciar el timeout
 			/* Meter en el conjunto de sockets los sockets UDP y TCP */
 			FD_ZERO(&readmask);
 			FD_SET(ls_TCP, &readmask);
@@ -684,6 +692,7 @@ char *argv[];
 				/* Comprobamos si el socket seleccionado es el socket TCP */
 				if (FD_ISSET(ls_TCP, &readmask))
 				{
+					alarm(0); // Reiniciar el timeout
 					/* Note that addrlen is passed as a pointer
 					 * so that the accept call can return the
 					 * size of the returned address.
@@ -722,6 +731,7 @@ char *argv[];
 				/* Comprobamos si el socket seleccionado es el socket UDP */
 				if (FD_ISSET(s_UDP, &readmask))
 				{
+					alarm(0); // Reiniciar el timeout 
 					/* This call will block until a new
 					 * request arrives.  Then, it will
 					 * return the address of the client,
@@ -880,8 +890,8 @@ void serverTCP(int s, struct sockaddr_in clientaddr_in)
 	memset(buf, 0, TAM_BUFFER);
 	while (len = recv(s, buf, TAM_BUFFER, 0))
 	{
-		if (len == -1)
-			errout(hostname);//(Quitamos el error) para que no salga por pantalla
+		// if (len == -1)
+		// 	errout(hostname);//(Quitamos el error) para que no salga por pantalla
 
 		procesar_peticion_TCP(s, buf);
 

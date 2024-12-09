@@ -116,6 +116,11 @@ char *argv[];
     }
 
     if (strcmp(argv[1], "TCP") == 0) {
+        // Crear fichero PUERTO.txt
+        FILE *fichero;
+        unsigned int puerto;
+        char nombre_fichero[TAM_BUFFER];
+
         /* Create the socket. */
         s = socket (AF_INET, SOCK_STREAM, 0);
         if (s == -1) {
@@ -172,7 +177,15 @@ char *argv[];
         addrlen = sizeof(struct sockaddr_in);
         if (getsockname(s, (struct sockaddr *)&myaddr_in, &addrlen) == -1) {
             perror(argv[0]);
-            fprintf(stderr, "%s: unable to read socket address\n", argv[0]);
+            fprintf(fichero, "%s: unable to read socket address\n", argv[0]);
+            exit(1);
+        }
+
+        puerto = ntohs(myaddr_in.sin_port);
+        memset(nombre_fichero, 0, TAM_BUFFER);
+        snprintf(nombre_fichero, TAM_BUFFER, "%u.txt", puerto);
+        if ((fichero = fopen(nombre_fichero, "w")) == NULL) {
+            perror("fopen");
             exit(1);
         }
 
@@ -184,12 +197,12 @@ char *argv[];
         * that this program could easily be ported to a host
         * that does require it.
         */
-        printf("Connected to %s on port %u at %s",
+        fprintf(fichero, "Connected to %s on port %u at %s",
                 hostname, ntohs(myaddr_in.sin_port), (char *) ctime(&timevar));
 
         /* Send the request to the server */
         if (send(s, usuario, strlen(usuario), 0) != strlen(usuario)) {
-            fprintf(stderr, "%s: Connection aborted on error ", argv[0]);
+            fprintf(fichero, "%s: Connection aborted on error ", argv[0]);
             exit(1);
         }
 
@@ -202,24 +215,30 @@ char *argv[];
         while (i = recv(s, respuesta_TCP, TAM_BUFFER, 0)) {
             if (i == -1) {
                 perror(argv[0]);
-                fprintf(stderr, "%s: error reading result\n", argv[0]);
+                fprintf(fichero, "%s: error reading result\n", argv[0]);
                 exit(1);
             }
             if (strcmp(respuesta_TCP, "\r\n") == 0) {
                 break;
             }
             respuesta_TCP[i] = '\0';
-            printf("\n%s\n", respuesta_TCP);
+            fprintf(fichero, "\n%s\n", respuesta_TCP);
         }
-
+        // Cerrar el fichero de logs
+        fclose(fichero);
         // Cerrar el socket al finalizar la conexión 
         close(s);
 
         /* Print message indicating completion of task. */
         time(&timevar);
-        printf("All done at %s", (char *)ctime(&timevar));
+        fprintf(fichero, "All done at %s", (char *)ctime(&timevar));
 
     } else if (strcmp(argv[1], "UDP") == 0) {
+
+        // Crear fichero PUERTO.txt
+        FILE *fichero;
+        unsigned int puerto;
+        char nombre_fichero[TAM_BUFFER];
 
         s = socket(AF_INET, SOCK_DGRAM, 0);
         if (s == -1) {
@@ -294,11 +313,18 @@ char *argv[];
         int nuevoPuerto = atoi(buf);
         servaddr_in.sin_port = htons(nuevoPuerto);
 
+        memset(nombre_fichero, 0, TAM_BUFFER);
+        snprintf(nombre_fichero, TAM_BUFFER, "%d.txt", nuevoPuerto);
+        if ((fichero = fopen(nombre_fichero, "w")) == NULL) {
+            perror("fopen");
+            exit(1);
+        }
+
         while (n_retry > 0) {
       
             if (sendto(s, usuario, strlen(usuario), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
                 perror(argv[0]);
-                fprintf(stderr, "%s: unable to send request\n", argv[0]);
+                fprintf(fichero, "%s: unable to send request\n", argv[0]);
                 exit(1);
             }
 
@@ -307,17 +333,17 @@ char *argv[];
             while (1 && n_retry > 0) {
                 if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                     if (errno == EINTR) {
-                        printf("Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
+                        fprintf(fichero, "Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
                         n_retry--;
                     } else {
                         perror(argv[0]);
-                        fprintf(stderr, "%s: unable to get response\n", argv[0]);
+                        fprintf(fichero, "%s: unable to get response\n", argv[0]);
                         exit(1);
                     }
                 } else {
                     alarm(0);
                     respuesta_UDP[cc] = '\0';
-                    printf("\n%s\n", respuesta_UDP);
+                    fprintf(fichero, "\n%s\n", respuesta_UDP);
                     if(strcmp(respuesta_UDP, "\r\n") == 0){
                         break;
                     }
@@ -327,9 +353,10 @@ char *argv[];
         }
 
         if (n_retry == 0) {
-            printf("Unable to get response from %s after %d attempts.\n", hostname, RETRIES);
+            fprintf(fichero, "Unable to get response from %s after %d attempts.\n", hostname, RETRIES);
         }
-
+        // Cerrar el fichero de logs
+        fclose(fichero);
         // Cerrar el socket al finalizar la conexión
         close(s);
 
