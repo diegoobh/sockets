@@ -141,17 +141,17 @@ Login desde getent
 Name desde getent 
 Directory desde getent 
 Shell desde getent 
-TTY desde wtmp o lastlog
-IP desde wtmp o lastlog
+TTY desde lastlog
+IP desde lastlog
 Tiempo de conexion desde lastlog
-Mail (revisar)
-Plan (revisar)
+Mail suele estar vacío
+Plan suele estar vacío
 
 // Plan para obtener info de todos los usuarios
 Login desde who 
-Nombre desde getent (ir haciendo uno a uno creo)
-TTY desde wtmp o lastlog 
-Idle desde lastlog creo 
-Login time desde lastlog creo
-Office(IP) desde wtmp o lastlog
+Nombre desde getent (ir haciendo uno a uno)
+TTY desde lastlog 
+Idle desde w 
+Login time desde lastlog 
+Office(IP) desde lastlog
 Office Phone suele estar vacío

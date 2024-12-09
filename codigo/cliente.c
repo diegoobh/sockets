@@ -17,6 +17,9 @@
 #include <netdb.h>
 #include <string.h>
 #include <time.h>
+#include <sys/sem.h>
+
+int sem_id;
 
 extern int errno;
 
@@ -33,6 +36,41 @@ extern int errno;
 
 void handler() {
     printf("Alarma recibida \n");
+}
+
+void wait_sem(int sem_id) {
+    struct sembuf sb = {0, -1, 0}; // Operación de resta
+    if (semop(sem_id, &sb, 1) == -1) {
+        perror("Error en wait_sem");
+        exit(1);
+    }
+}
+
+void signal_sem(int sem_id) {
+    struct sembuf sb = {0, 1, 0}; // Operación de suma 
+    if (semop(sem_id, &sb, 1) == -1) {
+        perror("Error en signal_sem");
+        exit(1);
+    }
+}
+
+void escribir_log(char *mensaje, unsigned int puerto) {
+    wait_sem(sem_id); // Bloquea el acceso al archivo
+
+    char nombre_fichero[TAM_BUFFER];
+    snprintf(nombre_fichero, TAM_BUFFER, "%u.txt", puerto);
+
+    FILE *fichero = fopen(nombre_fichero, "a");
+    if (fichero == NULL) {
+        perror("Error abriendo archivo de log");
+        signal_sem(sem_id); // Asegurar liberación del semáforo
+        exit(1);
+    }
+
+    fprintf(fichero, "%s\n", mensaje);
+    fclose(fichero);
+
+    signal_sem(sem_id); // Libera el acceso al archivo
 }
 
 int main(argc, argv)
@@ -52,6 +90,29 @@ char *argv[];
     char usuario[TAM_BUFFER];
     char respuesta_TCP[TAM_BUFFER];
     char respuesta_UDP[TAM_BUFFER];
+    char log[TAM_BUFFER];
+
+    // Estructura para semáforos
+    union semun {
+        int val;
+        struct semid_ds *buf;
+        unsigned short *array;
+    };
+
+    // Inicialización del semáforo
+    union semun sem_union;
+    sem_id = semget(IPC_PRIVATE, 1, IPC_CREAT | 0666); // Crear el semáforo
+    if (sem_id == -1) {
+        perror("Error creando el semáforo");
+        exit(1);
+    }
+
+    // Inicializar el semáforo a 1 (disponible)
+    sem_union.val = 1;
+    if (semctl(sem_id, 0, SETVAL, sem_union) == -1) {
+        perror("Error inicializando el semáforo");
+        exit(1);
+    }
 
     if (argc > 3) {
         fprintf(stderr, "Usage: %s TCP/UDP [usuario[@host]]\n", argv[0]);
@@ -116,11 +177,6 @@ char *argv[];
     }
 
     if (strcmp(argv[1], "TCP") == 0) {
-        // Crear fichero PUERTO.txt
-        FILE *fichero;
-        unsigned int puerto;
-        char nombre_fichero[TAM_BUFFER];
-
         /* Create the socket. */
         s = socket (AF_INET, SOCK_STREAM, 0);
         if (s == -1) {
@@ -181,14 +237,6 @@ char *argv[];
             exit(1);
         }
 
-        puerto = ntohs(myaddr_in.sin_port);
-        memset(nombre_fichero, 0, TAM_BUFFER);
-        snprintf(nombre_fichero, TAM_BUFFER, "%u.txt", puerto);
-        if ((fichero = fopen(nombre_fichero, "w")) == NULL) {
-            perror("fopen");
-            exit(1);
-        }
-
         /* Print out a startup message for the user. */
         time(&timevar);
         /* The port number must be converted first to host byte
@@ -197,12 +245,13 @@ char *argv[];
         * that this program could easily be ported to a host
         * that does require it.
         */
-        fprintf(fichero, "Connected to %s on port %u at %s",
-                hostname, ntohs(myaddr_in.sin_port), (char *) ctime(&timevar));
+        sprintf(log, "Connected to %s on port %u at %s", hostname, ntohs(myaddr_in.sin_port), (char *)ctime(&timevar));
+        escribir_log(log, ntohs(myaddr_in.sin_port));
 
         /* Send the request to the server */
         if (send(s, usuario, strlen(usuario), 0) != strlen(usuario)) {
-            fprintf(fichero, "%s: Connection aborted on error ", argv[0]);
+            sprintf(log, "%s: unable to send request\n", argv[0]);
+            escribir_log(log, ntohs(myaddr_in.sin_port));
             exit(1);
         }
 
@@ -215,30 +264,31 @@ char *argv[];
         while (i = recv(s, respuesta_TCP, TAM_BUFFER, 0)) {
             if (i == -1) {
                 perror(argv[0]);
-                fprintf(fichero, "%s: error reading result\n", argv[0]);
+                sprintf(log, "%s: error reading result\n", argv[0]);
+                escribir_log(log, ntohs(myaddr_in.sin_port));
                 exit(1);
             }
             if (strcmp(respuesta_TCP, "\r\n") == 0) {
                 break;
             }
             respuesta_TCP[i] = '\0';
-            fprintf(fichero, "\n%s\n", respuesta_TCP);
+            sprintf(log, "%s\n", respuesta_TCP);
+            escribir_log(log, ntohs(myaddr_in.sin_port));
         }
-        // Cerrar el fichero de logs
-        fclose(fichero);
         // Cerrar el socket al finalizar la conexión 
         close(s);
 
         /* Print message indicating completion of task. */
         time(&timevar);
-        fprintf(fichero, "All done at %s", (char *)ctime(&timevar));
+        sprintf(log, "All done at %s", (char *)ctime(&timevar));
+        escribir_log(log, ntohs(myaddr_in.sin_port));
+
+        // Eliminar el semáforo
+        if (semctl(sem_id, 0, IPC_RMID, 0) == -1) {
+            perror("Error eliminando el semáforo");
+        }
 
     } else if (strcmp(argv[1], "UDP") == 0) {
-
-        // Crear fichero PUERTO.txt
-        FILE *fichero;
-        unsigned int puerto;
-        char nombre_fichero[TAM_BUFFER];
 
         s = socket(AF_INET, SOCK_DGRAM, 0);
         if (s == -1) {
@@ -313,18 +363,12 @@ char *argv[];
         int nuevoPuerto = atoi(buf);
         servaddr_in.sin_port = htons(nuevoPuerto);
 
-        memset(nombre_fichero, 0, TAM_BUFFER);
-        snprintf(nombre_fichero, TAM_BUFFER, "%d.txt", nuevoPuerto);
-        if ((fichero = fopen(nombre_fichero, "w")) == NULL) {
-            perror("fopen");
-            exit(1);
-        }
-
         while (n_retry > 0) {
       
             if (sendto(s, usuario, strlen(usuario), 0, (struct sockaddr *)&servaddr_in, sizeof(struct sockaddr_in)) == -1) {
                 perror(argv[0]);
-                fprintf(fichero, "%s: unable to send request\n", argv[0]);
+                sprintf(log, "%s: unable to send request\n", argv[0]);
+                escribir_log(log, ntohs(servaddr_in.sin_port));
                 exit(1);
             }
 
@@ -333,17 +377,20 @@ char *argv[];
             while (1 && n_retry > 0) {
                 if ((cc = recvfrom(s, respuesta_UDP, TAM_BUFFER-1, 0, (struct sockaddr *)&servaddr_in, &addrlen)) == -1) {
                     if (errno == EINTR) {
-                        fprintf(fichero, "Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
+                        sprintf(log, "Attempt %d (retries %d).\n", RETRIES - n_retry + 1, RETRIES);
+                        escribir_log(log, ntohs(servaddr_in.sin_port));
                         n_retry--;
                     } else {
                         perror(argv[0]);
-                        fprintf(fichero, "%s: unable to get response\n", argv[0]);
+                        sprintf(log, "%s: unable to get response\n", argv[0]);
+                        escribir_log(log, ntohs(servaddr_in.sin_port));
                         exit(1);
                     }
                 } else {
                     alarm(0);
                     respuesta_UDP[cc] = '\0';
-                    fprintf(fichero, "\n%s\n", respuesta_UDP);
+                    sprintf(log, "%s\n", respuesta_UDP);
+                    escribir_log(log, ntohs(servaddr_in.sin_port));
                     if(strcmp(respuesta_UDP, "\r\n") == 0){
                         break;
                     }
@@ -353,12 +400,16 @@ char *argv[];
         }
 
         if (n_retry == 0) {
-            fprintf(fichero, "Unable to get response from %s after %d attempts.\n", hostname, RETRIES);
+            sprintf(log, "Unable to get response from %s after %d attempts.\n", hostname, RETRIES);
+            escribir_log(log, ntohs(servaddr_in.sin_port));
         }
-        // Cerrar el fichero de logs
-        fclose(fichero);
         // Cerrar el socket al finalizar la conexión
         close(s);
+
+        // Eliminar el semáforo
+        if (semctl(sem_id, 0, IPC_RMID, 0) == -1) {
+            perror("Error eliminando el semáforo");
+        }
 
     } else {
         fprintf(stderr, "Error de comparación");

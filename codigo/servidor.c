@@ -22,7 +22,7 @@
 #define ADDRNOTFOUND 0xffffffff /* return address for unfound host */
 #define TAM_BUFFER 516
 #define MAXHOST 128
-#define TIMEOUT 60
+#define TIMEOUT 300
 
 extern int errno;
 
