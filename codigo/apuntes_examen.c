@@ -72,8 +72,8 @@ FD_SET(socket, &fd_set) // Añadir el socket al conjunto de sockets
 
 Bucle infinito 
     select() -> fd_set 
-//                 UDP                          |         TCP      
-//--------------------------------------------------------------------------------------------
+//                 UDP  (FD_ISSET(s_UDP))       |         TCP  (FD_ISSET(ls_TCP))   
+//--------------------------------------------------------------------------------------------------
 recvfrom(socket, buff, &dir_cliente)            | socket = accept(ls, &dir_cliente)
                                                 | //Si es con varios clientes, hacemos fork()
 addrlen = sizeof(dir_cliente)                   | 
