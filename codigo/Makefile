@@ -12,7 +12,6 @@ all: ${PROGS}
 servidor: servidor.o
 	${CC} ${CFLAGS} -o $@ servidor.o ${LIBS}
 	
-
 cliente: cliente.o
 	${CC} ${CFLAGS} -o $@ cliente.o ${LIBS}
 
