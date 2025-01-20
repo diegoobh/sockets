@@ -1,5 +1,5 @@
 *.o
-clientudp
-clientcp
 servidor
 cliente
+.DS_Store
+*.pdf
