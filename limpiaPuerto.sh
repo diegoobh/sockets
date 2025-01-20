@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Verifica que se pase el número de puerto como argumento
 if [ "$#" -ne 1 ]; then
     echo "Uso: $0 <puerto>"
