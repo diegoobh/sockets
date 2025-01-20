@@ -1,8 +1,8 @@
 /*
 ** Fichero: servidor.c
 ** Autores:
-** Diego Borrallo Herrero DNI 49367527M
-** Jaime Castellanos Rubio DNI 71047797S
+** Diego Borrallo Herrero
+** Jaime Castellanos Rubio
 */
 
 #include <sys/types.h>
